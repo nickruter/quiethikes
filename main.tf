@@ -49,8 +49,16 @@ resource "aws_network_interface_sg_attachment" "wordpress_sg_attachment" {
 }
 
 resource "aws_key_pair" "example" {
-  key_name   = "example-key"  # Change this to your desired key name
-  public_key = "YOUR_PUBLIC_SSH_KEY_HERE"  # Change this to your public SSH key
+  key_name   = "terraform2"  # Change this to your desired key name
+  public_key = "-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1zqFb2Tb1AAKuVShy8hY
+n+Mwp4iqoxvkVaYh97hwyMKQMTBa7WCr63SF2GyIOCGypFlq/gHj4Ne/9B78llUy
+3kuos5O5pQicXjm8s/eW9UdBEB/Kjv99iUekwq8t7Eu5Z1QmAnl1ODiFxZXDplEK
+fD7jhKD5WW8126WFp2h74JAb5tKbvl4nZwk+nmtSxPLHFEeM23so5H+KUYxYFLSF
+SqMEudMN+iKVE9B1jepmE04lOrIo5zQr1ToSModIdd3ZYqJwVf0WIvWdrbUU+zx7
+kwQkEj2FY/t4Rx6B/pooMo5Zgrh4JLL+hUcfGKb8GKDg0WgQHKxtYkDUhQpZeuur
+eQIDAQAB
+-----END PUBLIC KEY-----"  # Change this to your public SSH key
 }
 
 # Provisioning script to install WordPress
