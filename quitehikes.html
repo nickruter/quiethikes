@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiet Hikes - 50 States Photo Collection</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #87CEEB 0%, #4682B4 50%, #1E90FF 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 0;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            font-size: 3rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #e74c3c;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .intro {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .intro p {
+            font-size: 1.1rem;
+            text-align: center;
+            line-height: 1.8;
+            color: #2c3e50;
+        }
+
+        .gallery-preview {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 15px;
+            margin-bottom: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .gallery-title {
+            text-align: center;
+            font-size: 2rem;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .photo-item {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            background: #f8f9fa;
+        }
+
+        .photo-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .photo {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+
+        .photo-item:hover .photo {
+            transform: scale(1.05);
+        }
+
+        .photo-caption {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+            color: white;
+            padding: 20px 15px 15px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Fallback styling for when images don't load */
+        .photo-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+            z-index: -1;
+        }
+
+        .photo-item:nth-child(2)::before {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+        }
+
+        .photo-item:nth-child(3)::before {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+        }
+
+        .photo-item:nth-child(4)::before {
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+        }
+
+        .photo-item:nth-child(5)::before {
+            background: linear-gradient(45deg, #9b59b6, #8e44ad);
+        }
+
+        .photo-item:nth-child(6)::before {
+            background: linear-gradient(45deg, #1abc9c, #16a085);
+        }
+
+        .states-section {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 15px;
+            margin-bottom: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .states-title {
+            text-align: center;
+            font-size: 2rem;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+
+        .states-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+        }
+
+                .state-item {
+            background: linear-gradient(135deg, #87CEEB, #4682B4);
+            color: white;
+            padding: 10px 5px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            background-size: 30%;
+            background-position: center;
+            background-repeat: no-repeat;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .state-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1;
+            transition: background 0.3s ease;
+        }
+
+        .state-item:hover::before {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .state-item span {
+            position: relative;
+            z-index: 2;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        }
+
+        .state-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .state-item.visited {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+        }
+
+        .state-item.visited.has-image {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+        }
+
+        .state-item.has-image::before {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .state-item.has-image:hover::before {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .cta-section {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin: 10px;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(231, 76, 60, 0.3);
+        }
+
+        .cta-button.secondary {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+
+        .cta-button.secondary:hover {
+            box-shadow: 0 10px 25px rgba(52, 152, 219, 0.3);
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 40px;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .stats {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .photo-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+
+            .states-grid {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Quiet Hikes</h1>
+            <p class="subtitle">A Photographic Journey Through All 50 States</p>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-number">21</div>
+                    <div class="stat-label">States</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">21</div>
+                    <div class="stat-label">Photos</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">6,800</div>
+                    <div class="stat-label">Miles Traveled</div>
+                </div>
+            </div>
+        </header>
+
+        <section class="intro">
+            <p>
+                  
+            </p>
+        </section>
+
+        <section class="gallery-preview">
+            <h2 class="gallery-title">Featured Photos</h2>
+            <div class="photo-grid">
+                <div class="photo-item">
+                    <img src="images/alabama.jpeg" alt="Alabama" class="photo">
+                    <div class="photo-caption">Alabama</div>
+                </div>
+                <div class="photo-item">
+                    <img src="images/ohio.jpeg" alt="Ohio" class="photo">
+                    <div class="photo-caption">Ohio</div>
+                </div>
+                <div class="photo-item">
+                    <img src="images/kentucky.jpeg" alt="Kentucky" class="photo">
+                    <div class="photo-caption">Kentucky</div>
+                </div>
+                <div class="photo-item">
+                    <img src="images/georgia.jpeg" alt="Georgia" class="photo">
+                    <div class="photo-caption">Georgia</div>
+                </div>
+                <div class="photo-item">
+                    <img src="images/new_hampshire.jpeg" alt="New Hampshire" class="photo">
+                    <div class="photo-caption">New Hampshire</div>
+                </div>
+                <div class="photo-item">
+                    <img src="images/south_dakota.jpeg" alt="South Dakota" class="photo">
+                    <div class="photo-caption">South Dakota</div>
+                </div>
+                <div class="photo-item">
+                    <img src="images/wyoming.jpeg" alt="Wyoming" class="photo">
+                    <div class="photo-caption">Wyoming</div>
+                </div>
+                <div class="photo-item">
+                    <img src="images/massachusetts.jpeg" alt="Massachusetts" class="photo">
+                    <div class="photo-caption">Massachusetts</div>
+                </div>
+                <div class="photo-item">
+                    <img src="images/montana.jpeg" alt="Montana" class="photo">
+                    <div class="photo-caption">Montana</div>
+                </div>
+                <div class="photo-item">
+                    <img src="images/tennessee.jpeg" alt="Tennessee" class="photo">
+                    <div class="photo-caption">Tennessee</div>
+                </div>
+                <div class="photo-item">
+                    <img src="images/new_york.jpeg" alt="New York" class="photo">
+                    <div class="photo-caption">New York</div>
+                </div>
+                <div class="photo-item">
+                    <img src="images/michigan.jpeg" alt="Michigan" class="photo">
+                    <div class="photo-caption">Michigan</div>
+                </div>
+                <div class="photo-item">
+                    <img src="images/indiana.jpeg" alt="Indiana" class="photo">
+                    <div class="photo-caption">Indiana</div>
+                </div>
+                <div class="photo-item">
+                    <img src="images/rhode_island.jpeg" alt="Rhode Island" class="photo">
+                    <div class="photo-caption">Rhode Island</div>
+                </div>
+                <div class="photo-item">
+                    <img src="images/west_virginia.jpeg" alt="West Virginia" class="photo">
+                    <div class="photo-caption">West Virginia</div>
+                </div>
+                <div class="photo-item">
+                    <img src="images/north_carolina.jpeg" alt="North Carolina" class="photo">
+                    <div class="photo-caption">North Carolina</div>
+                </div>
+                <div class="photo-item">
+                    <img src="images/florida.jpeg" alt="Florida" class="photo">
+                    <div class="photo-caption">Florida</div>
+                </div>
+                <div class="photo-item">
+                    <img src="images/vermont.jpeg" alt="Vermont" class="photo">
+                    <div class="photo-caption">Vermont</div>
+                </div>
+                <div class="photo-item">
+                    <img src="images/maine.jpeg" alt="Maine" class="photo">
+                    <div class="photo-caption">Maine</div>
+                </div>
+                <div class="photo-item">
+                    <img src="images/pennsylvania.jpeg" alt="Pennsylvania" class="photo">
+                    <div class="photo-caption">Pennsylvania</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="states-section">
+            <h2 class="states-title">States Explored</h2>
+            <div class="states-grid">
+                <div class="state-item visited" data-state="alabama"><span>Alabama</span></div>
+                <div class="state-item visited" data-state="alaska"><span>Alaska</span></div>
+                <div class="state-item visited" data-state="arizona"><span>Arizona</span></div>
+                <div class="state-item visited" data-state="arkansas"><span>Arkansas</span></div>
+                <div class="state-item visited" data-state="california"><span>California</span></div>
+                <div class="state-item visited" data-state="colorado"><span>Colorado</span></div>
+                <div class="state-item visited" data-state="connecticut"><span>Connecticut</span></div>
+                <div class="state-item visited" data-state="delaware"><span>Delaware</span></div>
+                <div class="state-item visited" data-state="florida"><span>Florida</span></div>
+                <div class="state-item visited" data-state="georgia"><span>Georgia</span></div>
+                <div class="state-item visited" data-state="hawaii"><span>Hawaii</span></div>
+                <div class="state-item visited" data-state="idaho"><span>Idaho</span></div>
+                <div class="state-item visited" data-state="illinois"><span>Illinois</span></div>
+                <div class="state-item visited" data-state="indiana"><span>Indiana</span></div>
+                <div class="state-item visited" data-state="iowa"><span>Iowa</span></div>
+                <div class="state-item visited" data-state="kansas"><span>Kansas</span></div>
+                <div class="state-item visited" data-state="kentucky"><span>Kentucky</span></div>
+                <div class="state-item visited" data-state="louisiana"><span>Louisiana</span></div>
+                <div class="state-item visited" data-state="maine"><span>Maine</span></div>
+                <div class="state-item visited" data-state="maryland"><span>Maryland</span></div>
+                <div class="state-item visited" data-state="massachusetts"><span>Massachusetts</span></div>
+                <div class="state-item visited" data-state="michigan"><span>Michigan</span></div>
+                <div class="state-item visited" data-state="minnesota"><span>Minnesota</span></div>
+                <div class="state-item visited" data-state="mississippi"><span>Mississippi</span></div>
+                <div class="state-item visited" data-state="missouri"><span>Missouri</span></div>
+                <div class="state-item visited" data-state="montana"><span>Montana</span></div>
+                <div class="state-item visited" data-state="nebraska"><span>Nebraska</span></div>
+                <div class="state-item visited" data-state="nevada"><span>Nevada</span></div>
+                <div class="state-item visited" data-state="new_hampshire"><span>New Hampshire</span></div>
+                <div class="state-item visited" data-state="new_jersey"><span>New Jersey</span></div>
+                <div class="state-item visited" data-state="new_mexico"><span>New Mexico</span></div>
+                <div class="state-item visited" data-state="new_york"><span>New York</span></div>
+                <div class="state-item visited" data-state="north_carolina"><span>North Carolina</span></div>
+                <div class="state-item visited" data-state="north_dakota"><span>North Dakota</span></div>
+                <div class="state-item visited" data-state="ohio"><span>Ohio</span></div>
+                <div class="state-item visited" data-state="oklahoma"><span>Oklahoma</span></div>
+                <div class="state-item visited" data-state="oregon"><span>Oregon</span></div>
+                <div class="state-item visited" data-state="pennsylvania"><span>Pennsylvania</span></div>
+                <div class="state-item visited" data-state="rhode_island"><span>Rhode Island</span></div>
+                <div class="state-item visited" data-state="south_carolina"><span>South Carolina</span></div>
+                <div class="state-item visited" data-state="south_dakota"><span>South Dakota</span></div>
+                <div class="state-item visited" data-state="tennessee"><span>Tennessee</span></div>
+                <div class="state-item visited" data-state="texas"><span>Texas</span></div>
+                <div class="state-item visited" data-state="utah"><span>Utah</span></div>
+                <div class="state-item visited" data-state="vermont"><span>Vermont</span></div>
+                <div class="state-item visited" data-state="virginia"><span>Virginia</span></div>
+                <div class="state-item visited" data-state="washington"><span>Washington</span></div>
+                <div class="state-item visited" data-state="west_virginia"><span>West Virginia</span></div>
+                <div class="state-item visited" data-state="wisconsin"><span>Wisconsin</span></div>
+                <div class="state-item visited" data-state="wyoming"><span>Wyoming</span></div>
+            </div>
+        </section>
+
+        <section class="cta-section">
+            <h2>Explore the Collection</h2>
+            <p style="margin-bottom: 30px; font-size: 1.1rem; color: #7f8c8d;">
+                Dive into the complete photo gallery and discover the beauty of America through my lens.
+            </p>
+            <a href="map.html" class="cta-button">Interactive Photo Map</a>
+            <a href="map.html" class="cta-button secondary">View by Location</a>
+        </section>
+
+        <footer>
+            <p>&copy; 2025 Quiet Hikes. All rights reserved. | Capturing America, one state at a time.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Add some interactive features
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate stats on page load
+            const statNumbers = document.querySelectorAll('.stat-number');
+            statNumbers.forEach(stat => {
+                const finalNumber = parseInt(stat.textContent.replace(/,|\+/g, ''));
+                let currentNumber = 0;
+                const increment = finalNumber / 50;
+                const timer = setInterval(() => {
+                    currentNumber += increment;
+                    if (currentNumber >= finalNumber) {
+                        clearInterval(timer);
+                        stat.textContent = stat.textContent; // Keep original formatting
+                    } else {
+                        stat.textContent = Math.floor(currentNumber).toLocaleString();
+                    }
+                }, 40);
+            });
+
+            // Add click handlers for state items
+            const stateItems = document.querySelectorAll('.state-item');
+            stateItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const stateName = item.getAttribute('data-state');
+                    // Navigate to individual state page
+                    window.location.href = `${stateName}.html`;
+                });
+            });
+
+            // Check for state images and set as background
+            function checkStateImages() {
+                stateItems.forEach(item => {
+                    const stateName = item.getAttribute('data-state');
+                    const imagePath = `thumbnails/${stateName}.jpeg`;
+                    
+                    // Create a new image to test if it exists
+                    const img = new Image();
+                    img.onload = function() {
+                        // Image exists, set it as background
+                        item.style.backgroundImage = `url('${imagePath}')`;
+                        item.classList.add('has-image');
+                    };
+                    img.onerror = function() {
+                        // Image doesn't exist, keep default gradient background
+                        console.log(`Image not found for ${stateName}: ${imagePath}`);
+                    };
+                    img.src = imagePath;
+                });
+            }
+
+            // Call the function to check for images
+            checkStateImages();
+
+            // Add click handlers for photo items
+            const photoItems = document.querySelectorAll('.photo-item');
+            photoItems.forEach(photo => {
+                photo.addEventListener('click', function() {
+                    const caption = this.querySelector('.photo-caption').textContent;
+                    const stateName = caption.toLowerCase().replace(' ', '_');
+                    // Navigate to individual state page
+                    window.location.href = `${stateName}.html`;
+                });
+            });
+        });
+    </script>
+</body>
+</html>

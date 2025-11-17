@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Photo Map - Quiet Hikes</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #87CEEB 0%, #4682B4 50%, #1E90FF 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .back-button {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.9);
+            color: #2c3e50;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 25px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            transition: transform 0.3s ease;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 1);
+        }
+
+        .map-header {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .map-title {
+            font-size: 3rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .map-subtitle {
+            font-size: 1.2rem;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+
+        .map-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #e74c3c;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .map-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+
+        .usa-map {
+            width: 100%;
+            max-width: 1000px;
+            height: auto;
+            margin: 0 auto;
+            display: block;
+        }
+
+        .usa-map path {
+            fill: #e8e8e8;
+            stroke: #ffffff;
+            stroke-width: 1;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .usa-map path:hover {
+            fill: #3498db;
+            transform: scale(1.02);
+            transform-origin: center;
+        }
+
+        .usa-map path.has-photos {
+            fill: #2ecc71;
+        }
+
+        .usa-map path.has-photos:hover {
+            fill: #27ae60;
+        }
+
+        .usa-map path.featured {
+            fill: #e74c3c;
+            animation: pulse 2s infinite;
+        }
+
+        .usa-map path.featured:hover {
+            fill: #c0392b;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .map-legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+        }
+
+        .legend-not-visited {
+            background: #e8e8e8;
+        }
+
+        .legend-visited {
+            background: #2ecc71;
+        }
+
+        .legend-featured {
+            background: #e74c3c;
+        }
+
+        .photo-display {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            display: none;
+        }
+
+        .photo-display.active {
+            display: block;
+        }
+
+        .photo-display h3 {
+            font-size: 2rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .photo-item {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .photo-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .photo-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .photo-caption {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+            color: white;
+            padding: 20px 15px 15px;
+            font-weight: bold;
+        }
+
+        .coming-soon {
+            text-align: center;
+            padding: 60px 20px;
+            color: #7f8c8d;
+            font-size: 1.2rem;
+            background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+            border-radius: 10px;
+            border: 2px dashed #dee2e6;
+        }
+
+        .state-info {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .state-nickname {
+            font-size: 1.1rem;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+
+        .close-button {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 20px;
+            transition: background 0.3s ease;
+        }
+
+        .close-button:hover {
+            background: #c0392b;
+        }
+
+        .route-info {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+
+        .route-info h3 {
+            font-size: 1.8rem;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .route-info p {
+            font-size: 1.1rem;
+            color: #7f8c8d;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .map-title {
+                font-size: 2rem;
+            }
+
+            .map-stats {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .map-legend {
+                flex-direction: column;
+                align-items: center;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="quitehikes.html" class="back-button">← Back to Gallery</a>
+        
+        <div class="map-header">
+            <h1 class="map-title">Interactive Photo Map</h1>
+            <p class="map-subtitle">Explore our hiking journey across America</p>
+            <div class="map-stats">
+                <div class="stat-item">
+                    <div class="stat-number">21</div>
+                    <div class="stat-label">States with Photos</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">20</div>
+                    <div class="stat-label">Featured States</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">21</div>
+                    <div class="stat-label">Total Photos</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">6,800</div>
+                    <div class="stat-label">Miles Traveled</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="route-info">
+            <h3>Our Journey from Cincinnati, Ohio</h3>
+            <p>Starting from Cincinnati, Ohio, we've traveled over 6,800 miles capturing the natural beauty of America's hiking destinations. Click on the colored states below to see our photos and planned adventures!</p>
+        </div>
+
+        <div class="map-container">
+            <svg class="usa-map" viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg">
+                <!-- Alabama -->
+                <path d="M640 380 L680 380 L680 440 L640 440 Z" data-state="alabama" data-name="Alabama" class="featured"></path>
+                <!-- Alaska -->
+                <path d="M50 450 L150 450 L150 550 L50 550 Z" data-state="alaska" data-name="Alaska"></path>
+                <!-- Arizona -->
+                <path d="M200 350 L280 350 L280 420 L200 420 Z" data-state="arizona" data-name="Arizona"></path>
+                <!-- Arkansas -->
+                <path d="M520 340 L580 340 L580 400 L520 400 Z" data-state="arkansas" data-name="Arkansas"></path>
+                <!-- California -->
+                <path d="M50 250 L120 250 L120 420 L50 420 Z" data-state="california" data-name="California"></path>
+                <!-- Colorado -->
+                <path d="M380 280 L460 280 L460 340 L380 340 Z" data-state="colorado" data-name="Colorado"></path>
+                <!-- Connecticut -->
+                <path d="M820 200 L860 200 L860 220 L820 220 Z" data-state="connecticut" data-name="Connecticut"></path>
+                <!-- Delaware -->
+                <path d="M800 240 L820 240 L820 260 L800 260 Z" data-state="delaware" data-name="Delaware"></path>
+                <!-- Florida -->
+                <path d="M680 440 L750 440 L750 520 L680 520 Z" data-state="florida" data-name="Florida" class="featured"></path>
+                <!-- Georgia -->
+                <path d="M680 350 L740 350 L740 420 L680 420 Z" data-state="georgia" data-name="Georgia" class="featured"></path>
+                <!-- Hawaii -->
+                <path d="M200 500 L280 500 L280 550 L200 550 Z" data-state="hawaii" data-name="Hawaii"></path>
+                <!-- Idaho -->
+                <path d="M250 150 L320 150 L320 250 L250 250 Z" data-state="idaho" data-name="Idaho"></path>
+                <!-- Illinois -->
+                <path d="M580 240 L620 240 L620 320 L580 320 Z" data-state="illinois" data-name="Illinois"></path>
+                <!-- Indiana -->
+                <path d="M620 240 L660 240 L660 320 L620 320 Z" data-state="indiana" data-name="Indiana" class="featured"></path>
+                <!-- Iowa -->
+                <path d="M520 220 L580 220 L580 280 L520 280 Z" data-state="iowa" data-name="Iowa"></path>
+                <!-- Kansas -->
+                <path d="M460 280 L540 280 L540 340 L460 340 Z" data-state="kansas" data-name="Kansas"></path>
+                <!-- Kentucky -->
+                <path d="M640 300 L720 300 L720 340 L640 340 Z" data-state="kentucky" data-name="Kentucky" class="featured"></path>
+                <!-- Louisiana -->
+                <path d="M520 400 L580 400 L580 460 L520 460 Z" data-state="louisiana" data-name="Louisiana"></path>
+                <!-- Maine -->
+                <path d="M860 120 L900 120 L900 200 L860 200 Z" data-state="maine" data-name="Maine" class="featured"></path>
+                <!-- Maryland -->
+                <path d="M760 240 L800 240 L800 280 L760 280 Z" data-state="maryland" data-name="Maryland"></path>
+                <!-- Massachusetts -->
+                <path d="M820 180 L880 180 L880 220 L820 220 Z" data-state="massachusetts" data-name="Massachusetts" class="featured"></path>
+                <!-- Michigan -->
+                <path d="M620 160 L680 160 L680 240 L620 240 Z" data-state="michigan" data-name="Michigan" class="featured"></path>
+                <!-- Minnesota -->
+                <path d="M520 140 L580 140 L580 220 L520 220 Z" data-state="minnesota" data-name="Minnesota"></path>
+                <!-- Mississippi -->
+                <path d="M580 360 L620 360 L620 440 L580 440 Z" data-state="mississippi" data-name="Mississippi"></path>
+                <!-- Missouri -->
+                <path d="M520 280 L580 280 L580 360 L520 360 Z" data-state="missouri" data-name="Missouri"></path>
+                <!-- Montana -->
+                <path d="M320 100 L460 100 L460 180 L320 180 Z" data-state="montana" data-name="Montana" class="featured"></path>
+                <!-- Nebraska -->
+                <path d="M460 220 L540 220 L540 280 L460 280 Z" data-state="nebraska" data-name="Nebraska"></path>
+                <!-- Nevada -->
+                <path d="M150 220 L220 220 L220 350 L150 350 Z" data-state="nevada" data-name="Nevada"></path>
+                <!-- New Hampshire -->
+                <path d="M840 160 L870 160 L870 200 L840 200 Z" data-state="new_hampshire" data-name="New Hampshire" class="featured"></path>
+                <!-- New Jersey -->
+                <path d="M800 220 L830 220 L830 260 L800 260 Z" data-state="new_jersey" data-name="New Jersey"></path>
+                <!-- New Mexico -->
+                <path d="M340 320 L420 320 L420 420 L340 420 Z" data-state="new_mexico" data-name="New Mexico"></path>
+                <!-- New York -->
+                <path d="M780 160 L840 160 L840 220 L780 220 Z" data-state="new_york" data-name="New York" class="featured"></path>
+                <!-- North Carolina -->
+                <path d="M720 280 L800 280 L800 340 L720 340 Z" data-state="north_carolina" data-name="North Carolina" class="featured"></path>
+                <!-- North Dakota -->
+                <path d="M420 100 L500 100 L500 160 L420 160 Z" data-state="north_dakota" data-name="North Dakota"></path>
+                <!-- Ohio -->
+                <path d="M680 240 L740 240 L740 300 L680 300 Z" data-state="ohio" data-name="Ohio" class="featured"></path>
+                <!-- Oklahoma -->
+                <path d="M460 340 L540 340 L540 400 L460 400 Z" data-state="oklahoma" data-name="Oklahoma"></path>
+                <!-- Oregon -->
+                <path d="M120 150 L200 150 L200 220 L120 220 Z" data-state="oregon" data-name="Oregon"></path>
+                <!-- Pennsylvania -->
+                <path d="M740 200 L800 200 L800 260 L740 260 Z" data-state="pennsylvania" data-name="Pennsylvania" class="featured"></path>
+                <!-- Rhode Island -->
+                <path d="M860 200 L880 200 L880 220 L860 220 Z" data-state="rhode_island" data-name="Rhode Island" class="featured"></path>
+                <!-- South Carolina -->
+                <path d="M720 340 L780 340 L780 380 L720 380 Z" data-state="south_carolina" data-name="South Carolina"></path>
+                <!-- South Dakota -->
+                <path d="M420 160 L500 160 L500 220 L420 220 Z" data-state="south_dakota" data-name="South Dakota" class="featured"></path>
+                <!-- Tennessee -->
+                <path d="M640 340 L720 340 L720 380 L640 380 Z" data-state="tennessee" data-name="Tennessee" class="featured"></path>
+                <!-- Texas -->
+                <path d="M380 380 L520 380 L520 480 L380 480 Z" data-state="texas" data-name="Texas"></path>
+                <!-- Utah -->
+                <path d="M280 250 L340 250 L340 350 L280 350 Z" data-state="utah" data-name="Utah"></path>
+                <!-- Vermont -->
+                <path d="M820 140 L850 140 L850 180 L820 180 Z" data-state="vermont" data-name="Vermont" class="featured"></path>
+                <!-- Virginia -->
+                <path d="M720 240 L780 240 L780 300 L720 300 Z" data-state="virginia" data-name="Virginia"></path>
+                <!-- Washington -->
+                <path d="M120 80 L200 80 L200 150 L120 150 Z" data-state="washington" data-name="Washington"></path>
+                <!-- West Virginia -->
+                <path d="M720 220 L760 220 L760 280 L720 280 Z" data-state="west_virginia" data-name="West Virginia" class="featured"></path>
+                <!-- Wisconsin -->
+                <path d="M580 160 L620 160 L620 240 L580 240 Z" data-state="wisconsin" data-name="Wisconsin"></path>
+                <!-- Wyoming -->
+                <path d="M340 180 L420 180 L420 280 L340 280 Z" data-state="wyoming" data-name="Wyoming" class="featured"></path>
+            </svg>
+
+            <div class="map-legend">
+                <div class="legend-item">
+                    <div class="legend-color legend-not-visited"></div>
+                    <span>Not Yet Explored</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color legend-visited"></div>
+                    <span>Visited (Coming Soon)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color legend-featured"></div>
+                    <span>Featured Photos Available</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="photo-display" id="photoDisplay">
+            <div class="state-info">
+                <h3 id="stateName"></h3>
+                <p class="state-nickname" id="stateNickname"></p>
+            </div>
+            <div id="photoContent"></div>
+            <button class="close-button" onclick="closePhotoDisplay()">Close Gallery</button>
+        </div>
+    </div>
+
+    <script>
+        // State data with photos and information
+        const stateData = {
+            alabama: {
+                name: "Alabama",
+                nickname: "Heart of Dixie",
+                photos: ["alabama.jpeg"],
+                hasPhotos: true
+            },
+            ohio: {
+                name: "Ohio",
+                nickname: "The Buckeye State",
+                photos: ["ohio.jpeg"],
+                hasPhotos: true
+            },
+            kentucky: {
+                name: "Kentucky",
+                nickname: "The Bluegrass State",
+                photos: ["kentucky.jpeg"],
+                hasPhotos: true
+            },
+            georgia: {
+                name: "Georgia",
+                nickname: "The Peach State",
+                photos: ["georgia.jpeg"],
+                hasPhotos: true
+            },
+            new_hampshire: {
+                name: "New Hampshire",
+                nickname: "The Live Free or Die State",
+                photos: ["new_hampshire.jpeg"],
+                hasPhotos: true
+            },
+            south_dakota: {
+                name: "South Dakota",
+                nickname: "The Mount Rushmore State",
+                photos: ["south_dakota.jpeg"],
+                hasPhotos: true
+            },
+            wyoming: {
+                name: "Wyoming",
+                nickname: "The Equality State",
+                photos: ["wyoming.jpeg"],
+                hasPhotos: true
+            },
+            massachusetts: {
+                name: "Massachusetts",
+                nickname: "The Bay State",
+                photos: ["massachusetts.jpeg"],
+                hasPhotos: true
+            },
+            montana: {
+                name: "Montana",
+                nickname: "The Treasure State",
+                photos: ["montana.jpeg"],
+                hasPhotos: true
+            },
+            tennessee: {
+                name: "Tennessee",
+                nickname: "The Volunteer State",
+                photos: ["tennessee.jpeg"],
+                hasPhotos: true
+            },
+            new_york: {
+                name: "New York",
+                nickname: "The Empire State",
+                photos: ["new_york.jpeg"],
+                hasPhotos: true
+            },
+            michigan: {
+                name: "Michigan",
+                nickname: "The Great Lakes State",
+                photos: ["michigan.jpeg"],
+                hasPhotos: true
+            },
+            indiana: {
+                name: "Indiana",
+                nickname: "The Hoosier State",
+                photos: ["indiana.jpeg"],
+                hasPhotos: true
+            },
+            rhode_island: {
+                name: "Rhode Island",
+                nickname: "The Ocean State",
+                photos: ["rhode_island.jpeg"],
+                hasPhotos: true
+            },
+            west_virginia: {
+                name: "West Virginia",
+                nickname: "The Mountain State",
+                photos: ["west_virginia.jpeg"],
+                hasPhotos: true
+            },
+            north_carolina: {
+                name: "North Carolina",
+                nickname: "The Tar Heel State",
+                photos: ["north_carolina.jpeg"],
+                hasPhotos: true
+            },
+            florida: {
+                name: "Florida",
+                nickname: "The Sunshine State",
+                photos: ["florida.jpeg"],
+                hasPhotos: true
+            },
+            vermont: {
+                name: "Vermont",
+                nickname: "The Green Mountain State",
+                photos: ["vermont.jpeg"],
+                hasPhotos: true
+            },
+            maine: {
+                name: "Maine",
+                nickname: "The Pine Tree State",
+                photos: ["maine.jpeg"],
+                hasPhotos: true
+            },
+            pennsylvania: {
+                name: "Pennsylvania",
+                nickname: "The Keystone State",
+                photos: ["pennsylvania.jpeg"],
+                hasPhotos: true
+            }
+        };
+
+        // Initialize the map
+        document.addEventListener('DOMContentLoaded', function() {
+            const mapPaths = document.querySelectorAll('.usa-map path');
+            
+            // Add click handlers and set initial states
+            mapPaths.forEach(path => {
+                const stateName = path.getAttribute('data-state');
+                
+                // Set initial appearance based on photo availability
+                if (stateData[stateName] && stateData[stateName].hasPhotos) {
+                    if (!path.classList.contains('featured')) {
+                        path.classList.add('has-photos');
+                    }
+                } else {
+                    // States without photos get the visited class for future photos
+                    path.classList.add('has-photos');
+                }
+                
+                // Add click handler
+                path.addEventListener('click', function() {
+                    showStatePhotos(stateName);
+                });
+
+                // Add hover tooltip
+                path.addEventListener('mouseenter', function(e) {
+                    const tooltip = createTooltip(path.getAttribute('data-name'));
+                    document.body.appendChild(tooltip);
+                    positionTooltip(tooltip, e);
+                });
+
+                path.addEventListener('mouseleave', function() {
+                    const tooltip = document.querySelector('.map-tooltip');
+                    if (tooltip) {
+                        tooltip.remove();
+                    }
+                });
+
+                path.addEventListener('mousemove', function(e) {
+                    const tooltip = document.querySelector('.map-tooltip');
+                    if (tooltip) {
+                        positionTooltip(tooltip, e);
+                    }
+                });
+            });
+        });
+
+        function createTooltip(stateName) {
+            const tooltip = document.createElement('div');
+            tooltip.className = 'map-tooltip';
+            tooltip.textContent = stateName;
+            tooltip.style.cssText = `
+                position: absolute;
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 8px 12px;
+                border-radius: 4px;
+                font-size: 14px;
+                pointer-events: none;
+                z-index: 1000;
+                white-space: nowrap;
+            `;
+            return tooltip;
+        }
+
+        function positionTooltip(tooltip, e) {
+            tooltip.style.left = (e.pageX + 10) + 'px';
+            tooltip.style.top = (e.pageY - 30) + 'px';
+        }
+
+        function showStatePhotos(stateName) {
+            const photoDisplay = document.getElementById('photoDisplay');
+            const stateNameEl = document.getElementById('stateName');
+            const stateNicknameEl = document.getElementById('stateNickname');
+            const photoContent = document.getElementById('photoContent');
+
+            // Get state data
+            const state = stateData[stateName] || {
+                name: stateName.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                nickname: "Coming Soon",
+                photos: [],
+                hasPhotos: false
+            };
+
+            // Set state info
+            stateNameEl.textContent = state.name;
+            stateNicknameEl.textContent = state.nickname;
+
+            // Clear previous content
+            photoContent.innerHTML = '';
+
+            if (state.hasPhotos && state.photos.length > 0) {
+                // Create photo grid
+                const photoGrid = document.createElement('div');
+                photoGrid.className = 'photo-grid';
+
+                state.photos.forEach(photo => {
+                    const photoItem = document.createElement('div');
+                    photoItem.className = 'photo-item';
+                    photoItem.innerHTML = `
+                        <img src="images/${photo}" alt="${state.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=\\"http://www.w3.org/2000/svg\\" width=\\"250\\" height=\\"200\\"><rect width=\\"100%\\" height=\\"100%\\" fill=\\"%23f8f9fa\\"/><text x=\\"50%\\" y=\\"50%\\" text-anchor=\\"middle\\" dy=\\".3em\\" fill=\\"%236c757d\\">Photo Loading...</text></svg>'">
+                        <div class="photo-caption">${state.name}</div>
+                    `;
+                    
+                    // Add click handler to view individual state page
+                    photoItem.addEventListener('click', function() {
+                        window.location.href = `${stateName}.html`;
+                    });
+                    
+                    photoGrid.appendChild(photoItem);
+                });
+
+                photoContent.appendChild(photoGrid);
+
+                // Add link to state page
+                const stateLink = document.createElement('div');
+                stateLink.style.textAlign = 'center';
+                stateLink.innerHTML = `
+                    <a href="${stateName}.html" style="
+                        display: inline-block;
+                        background: #3498db;
+                        color: white;
+                        padding: 10px 20px;
+                        text-decoration: none;
+                        border-radius: 5px;
+                        margin-top: 20px;
+                        transition: background 0.3s ease;
+                    " onmouseover="this.style.background='#2980b9'" onmouseout="this.style.background='#3498db'">
+                        View ${state.name} Adventure Details →
+                    </a>
+                `;
+                photoContent.appendChild(stateLink);
+
+            } else {
+                // Show coming soon message
+                const comingSoon = document.createElement('div');
+                comingSoon.className = 'coming-soon';
+                comingSoon.innerHTML = `
+                    <h4>🏞️ Coming Soon!</h4>
+                    <p>We haven't captured our ${state.name} hiking adventure yet, but it's on our list!</p>
+                    <a href="${stateName}.html" style="
+                        display: inline-block;
+                        background: #2ecc71;
+                        color: white;
+                        padding: 10px 20px;
+                        text-decoration: none;
+                        border-radius: 5px;
+                        margin-top: 15px;
+                        transition: background 0.3s ease;
+                    " onmouseover="this.style.background='#27ae60'" onmouseout="this.style.background='#2ecc71'">
+                        See Our Planned ${state.name} Adventure →
+                    </a>
+                `;
+                photoContent.appendChild(comingSoon);
+            }
+
+            // Show the photo display
+            photoDisplay.classList.add('active');
+            photoDisplay.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function closePhotoDisplay() {
+            const photoDisplay = document.getElementById('photoDisplay');
+            photoDisplay.classList.remove('active');
+            
+            // Scroll back to map
+            document.querySelector('.map-container').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Add some visual flair with pulsing animation for featured states
+        setInterval(() => {
+            const featuredStates = document.querySelectorAll('.usa-map path.featured');
+            featuredStates.forEach(state => {
+                state.style.opacity = state.style.opacity === '0.7' ? '1' : '0.7';
+            });
+        }, 1500);
+    </script>
+</body>
+</html>

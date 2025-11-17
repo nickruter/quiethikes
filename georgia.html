@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Georgia - Quiet Hikes</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #87CEEB 0%, #4682B4 50%, #1E90FF 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .back-button {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.9);
+            color: #2c3e50;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 25px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            transition: transform 0.3s ease;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 1);
+        }
+
+        .state-header {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .state-title {
+            font-size: 3rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .state-subtitle {
+            font-size: 1.2rem;
+            color: #7f8c8d;
+        }
+
+        .image-section {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+
+        .state-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+        }
+
+        .summary-section {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .summary-title {
+            font-size: 2rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .summary-text {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #2c3e50;
+            text-align: justify;
+        }
+
+        .highlights {
+            margin-top: 30px;
+        }
+
+        .highlights h3 {
+            color: #e74c3c;
+            margin-bottom: 15px;
+        }
+
+        .highlights ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .highlights li {
+            background: rgba(231, 76, 60, 0.1);
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="quitehikes.html" class="back-button">← Back to Gallery</a>
+        
+        <div class="state-header">
+            <h1 class="state-title">Georgia</h1>
+            <p class="state-subtitle">The Peach State</p>
+        </div>
+
+        <div class="image-section">
+            <img src="images/georgia.jpeg" alt="Georgia Mountain Trail" class="state-image">
+        </div>
+
+        <div class="summary-section">
+            <h2 class="summary-title">Our Georgia Adventure</h2>
+            <div class="summary-text">
+                <p>
+                    Georgia's diverse landscapes provided us with some of our most memorable hiking experiences. From 
+                    the rugged Appalachian Mountains in the north to the mysterious Okefenokee Swamp in the south, 
+                    the Peach State offers incredible variety for outdoor enthusiasts. Our journey through Georgia 
+                    took us along mountain ridges with panoramic views, through ancient forests, and beside cascading 
+                    waterfalls that epitomize the natural beauty of the Southeast.
+                </p>
+                <p>
+                    The southern hospitality we encountered on Georgia's trails was as warm as the climate. Fellow 
+                    hikers and locals shared their favorite spots and stories, making our exploration feel like a 
+                    journey through both stunning landscapes and rich cultural heritage.
+                </p>
+            </div>
+
+            <div class="highlights">
+                <h3>Hiking Highlights:</h3>
+                <ul>
+                    <li>🏔️ Appalachian Trail - Georgia's portion including Springer Mountain</li>
+                    <li>💧 Amicalola Falls - Georgia's tallest waterfall with dramatic views</li>
+                    <li>🌲 Chattahoochee National Forest - Diverse mountain ecosystems</li>
+                    <li>🦅 Okefenokee National Wildlife Refuge - Unique swampland trails</li>
+                    <li>⛰️ Brasstown Bald - Georgia's highest peak with 360-degree views</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
