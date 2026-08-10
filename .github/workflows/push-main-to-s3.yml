@@ -1,0 +1,79 @@
+name: Push main to S3
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Resolve AWS authentication method
+        id: resolve-auth
+        env:
+          AWS_ROLE_ARN_SECRET: ${{ secrets.AWS_ROLE_ARN }}
+          AWS_ROLE_TO_ASSUME_SECRET: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          AWS_ROLE_ARN_VAR: ${{ vars.AWS_ROLE_ARN }}
+          AWS_ROLE_TO_ASSUME_VAR: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          AWS_ACCESS_KEY_ID_SECRET: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY_SECRET: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID_VAR: ${{ vars.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY_VAR: ${{ vars.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          ROLE_TO_ASSUME="${AWS_ROLE_ARN_SECRET:-${AWS_ROLE_TO_ASSUME_SECRET:-${AWS_ROLE_ARN_VAR:-${AWS_ROLE_TO_ASSUME_VAR:-}}}}"
+          ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID_SECRET:-${AWS_ACCESS_KEY_ID_VAR:-}}"
+          SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY_SECRET:-${AWS_SECRET_ACCESS_KEY_VAR:-}}"
+
+          if [ -n "$ROLE_TO_ASSUME" ]; then
+            echo "auth_mode=oidc" >> "$GITHUB_OUTPUT"
+            echo "role_to_assume=$ROLE_TO_ASSUME" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ -n "$ACCESS_KEY_ID" ] && [ -n "$SECRET_ACCESS_KEY" ]; then
+            echo "::add-mask::$ACCESS_KEY_ID"
+            echo "::add-mask::$SECRET_ACCESS_KEY"
+            echo "auth_mode=static_keys" >> "$GITHUB_OUTPUT"
+            echo "aws_access_key_id=$ACCESS_KEY_ID" >> "$GITHUB_OUTPUT"
+            echo "aws_secret_access_key=$SECRET_ACCESS_KEY" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Missing AWS authentication configuration."
+          echo "Configure one of these in repository Actions settings:"
+          echo "1) OIDC role (recommended): AWS_ROLE_ARN or AWS_ROLE_TO_ASSUME"
+          echo "2) Static keys: AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
+          echo "Path: Settings -> Secrets and variables -> Actions"
+          exit 1
+
+      - name: Configure AWS credentials (OIDC)
+        if: steps.resolve-auth.outputs.auth_mode == 'oidc'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ steps.resolve-auth.outputs.role_to_assume }}
+          role-session-name: github-actions-push-main-to-s3
+          aws-region: us-east-1
+
+      - name: Configure AWS credentials (static keys)
+        if: steps.resolve-auth.outputs.auth_mode == 'static_keys'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ steps.resolve-auth.outputs.aws_access_key_id }}
+          aws-secret-access-key: ${{ steps.resolve-auth.outputs.aws_secret_access_key }}
+          aws-region: us-east-1
+
+      - name: Sync repository to S3
+        run: |
+          aws s3 sync . s3://quiethikes.org --delete --exclude ".git/*" --exclude ".github/*"
+
+      - name: Done
+        run: echo "Repository synced to s3://quiethikes.org"
