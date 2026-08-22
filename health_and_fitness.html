@@ -81,6 +81,14 @@
 
 		<button class="save" id="save">Save workout</button>
 
+		<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+			<button id="export" class="cta-button secondary" style="padding:10px 12px;border-radius:9px;background:linear-gradient(135deg,#3498db,#2980b9);color:#fff">Export Data</button>
+			<label for="import-file" style="display:inline-block">
+				<input id="import-file" type="file" accept="application/json" style="display:none">
+				<button id="import" class="cta-button secondary" style="padding:10px 12px;border-radius:9px;background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff">Import Data</button>
+			</label>
+		</div>
+
 		<section class="card">
 			<div class="row"><h2>📋 Recent workouts</h2><button class="danger" id="clear">Clear history</button></div>
 			<ol class="history" id="history"></ol>
@@ -148,6 +156,71 @@
 			render();
 			alert(`Workout saved on this device. Total weight moved: ${totalMoved.toLocaleString()} lb`);
 		};
+
+		// Export / Import helpers so users on phones can save their data to Files or share it
+		async function exportData() {
+			try {
+				const data = localStorage.getItem('workouts') || '[]';
+				const blob = new Blob([data], { type: 'application/json' });
+				const fileName = `workouts-${new Date().toISOString().slice(0,10)}.json`;
+
+				// Preferred: Web Share API with files (mobile browsers that support it)
+				if (navigator.canShare && navigator.canShare({ files: [new File([blob], fileName, { type: 'application/json' })] })) {
+					const file = new File([blob], fileName, { type: 'application/json' });
+					await navigator.share({ files: [file], title: 'Workout export', text: 'My workout data' });
+					return;
+				}
+
+				// Fallback: trigger download — on iPhone Safari this will open the data; instruct user to use the Share -> Save to Files option
+				const url = URL.createObjectURL(blob);
+				const a = document.createElement('a');
+				a.href = url;
+				a.download = fileName;
+				document.body.appendChild(a);
+				a.click();
+				a.remove();
+				URL.revokeObjectURL(url);
+				// iOS hint: the file may open in a new tab — long-press the file and choose "Save to Files" to keep it
+				alert('If your browser opened the file instead of downloading, long-press the file and choose "Save to Files" to store it on your iPhone.');
+			} catch (err) {
+				console.error(err);
+				// Last-resort: copy JSON to clipboard
+				try {
+					await navigator.clipboard.writeText(localStorage.getItem('workouts') || '[]');
+					alert('Export failed, but the data was copied to clipboard. Paste into a note or save it somewhere.');
+				} catch (copyErr) {
+					alert('Export failed and copy to clipboard failed. See console for details.');
+				}
+			}
+		}
+
+		function importDataFile(file) {
+			if (!file) return;
+			const reader = new FileReader();
+			reader.onload = () => {
+				try {
+					const parsed = JSON.parse(reader.result);
+					if (!Array.isArray(parsed)) throw new Error('Invalid backup format — expected an array');
+					localStorage.setItem('workouts', JSON.stringify(parsed));
+					render();
+					alert('Import complete — workouts restored to this device.');
+				} catch (e) {
+					alert('Import failed: ' + (e.message || e));
+				}
+			};
+			reader.readAsText(file);
+		}
+
+		// Wire export/import UI
+		document.getElementById('export').addEventListener('click', exportData);
+		const importFile = document.getElementById('import-file');
+		importFile.addEventListener('change', (ev) => {
+			const f = ev.target.files && ev.target.files[0];
+			if (f) importDataFile(f);
+			// clear selection so same file can be re-imported later
+			importFile.value = '';
+		});
+		document.getElementById('import').addEventListener('click', () => importFile.click());
 
 		clear.onclick=()=>{ if(confirm('Delete all saved workouts from this device?')){ localStorage.removeItem('workouts'); render(); } };
 		render();
