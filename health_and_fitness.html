@@ -1,2 +1,156 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#126e5a"><title>Workout Tracker</title><style>
-:root{--green:#126e5a;--dark:#093f35;--mint:#e8f7f1;--blue:#eaf4ff;--gold:#fff4d8;--rose:#fff0ee;--ink:#15211e;--muted:#5d6d67;--line:#d5e4de;--white:#fff}*{box-sizing:border-box}body{margin:0;background:linear-gradient(160deg,#e6f5ef 0%,#f6f9f7 55%,#eaf3ff 100%);color:var(--ink);font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:16px 14px 42px;min-height:100vh}main{max-width:650px;margin:auto}h1{font-size:27px;margin:4px 0;color:var(--dark)}h2{font-size:18px;margin:0 0 12px;color:var(--dark)}.sub{color:var(--muted);margin:0 0 16px}.card{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:15px;margin:12px 0;box-shadow:0 3px 14px #0d413012}.card:nth-of-type(2){border-top:5px solid #126e5a}.card:nth-of-type(3){border-top:5px solid #2672b8}.card:nth-of-type(4){border-top:5px solid #e1a424}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.machines{display:grid;grid-template-columns:1fr 70px 62px 62px;gap:8px;align-items:center}.machines b{font-size:13px;color:#466057}label{display:block;font-weight:700;font-size:13px;color:#344b43;margin-bottom:4px}input{width:100%;border:1px solid #b9cec5;border-radius:9px;padding:10px;font-size:16px;background:#fbfefd;color:var(--ink)}input:focus{outline:3px solid #9cdbc84f;border-color:var(--green)}input[type=checkbox]{width:21px;height:21px;accent-color:var(--green)}button{border:0;border-radius:11px;padding:12px 14px;font-size:16px;font-weight:750;cursor:pointer}.save{width:100%;background:linear-gradient(135deg,#16866d,#0e624f);color:#fff;margin-top:4px;box-shadow:0 3px 7px #0e624f45}.danger{background:var(--rose);color:#aa2a20;font-size:14px}.note{font-size:13px;color:var(--muted);line-height:1.35}.row{display:flex;gap:8px;align-items:center;justify-content:space-between}.history{margin:0;padding-left:20px}.history li{padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}.tag{font-weight:750;color:var(--green)}.checkrow{display:flex;gap:10px;align-items:center;margin-top:12px;font-weight:650}.small{font-size:12px;color:var(--muted)}@media(max-width:390px){.machines{grid-template-columns:1fr 60px 54px 54px;gap:5px}.machines input{padding:8px;font-size:15px}}</style></head><body><main><h1>🏃 Workout Tracker</h1><p class="sub">Machines • weight • sets • reps • cardio • heart rate</p><section class="card"><div class="grid"><div><label>Date</label><input id="date" type="date"></div><div><label>How did you feel?</label><input id="feel" placeholder="Good, tired, sore..."></div></div></section><section class="card"><h2>💪 Strength machines</h2><div class="machines"><b>Machine</b><b>Wt. lb</b><b>Sets</b><b>Reps</b></div><div id="machineRows"></div><p class="note">Use light-to-moderate weight. Breathe continuously; do not hold your breath.</p></section><section class="card"><h2>❤️ Cardio</h2><div class="grid"><div><label>Minutes</label><input id="minutes" type="number" min="0" step="1" placeholder="15"></div><div><label>Peak HR (bpm)</label><input id="hr" type="number" min="0" step="1" placeholder="120"></div><div><label>Speed (mph)</label><input id="speed" type="number" min="0" step="0.1" placeholder="2.5"></div><div><label>Incline (%)</label><input id="incline" type="number" min="0" step="0.5" placeholder="2.5"></div></div><label class="checkrow"><input id="talk" type="checkbox"> I could talk in short sentences</label></section><section class="card"><h2>⚠️ Safety check</h2><label class="checkrow"><input id="symptoms" type="checkbox"> I had chest pain, dizziness, faintness, or unusual shortness of breath</label><p class="note">If checked, stop exercising and seek medical advice urgently for severe or persistent symptoms.</p></section><button class="save" id="save">Save workout</button><section class="card"><div class="row"><h2>📋 Recent workouts</h2><button class="danger" id="clear">Clear history</button></div><ol class="history" id="history"></ol></section></main><script>const machines=['Leg press','Seated leg curl','Leg extension','Chest press','Seated row','Lateral raise','Arm curl','Arm extension','Ab crunch / torso rotation'];const rows=document.getElementById('machineRows');rows.innerHTML=machines.map((m,i)=>`<div class="machines" style="margin-top:9px"><label style="margin:0;font-size:14px">${m}</label><input id="w${i}" type="number" min="0" step="5" placeholder="lb"><input id="s${i}" type="number" min="0" max="9" placeholder="2"><input id="r${i}" type="number" min="0" max="99" placeholder="10"></div>`).join('');date.value=new Date().toISOString().slice(0,10);const read=()=>JSON.parse(localStorage.getItem('workouts')||'[]');const render=()=>{let x=read();history.innerHTML=x.length?x.slice().reverse().map(w=>`<li><span class="tag">${w.date}</span> — ${w.cardio||'No cardio'}${w.strength?'; '+w.strength:''}${w.feel?' · '+w.feel:''}</li>`).join(''):'<li class="small">No saved workouts yet.</li>'};save.onclick=()=>{const strength=machines.map((m,i)=>{let w=document.getElementById('w'+i).value,s=document.getElementById('s'+i).value,r=document.getElementById('r'+i).value;return w||s||r?`${m}: ${w||0} lb, ${s||0}×${r||0}`:''}).filter(Boolean).join(', ');const c=[];if(minutes.value)c.push(`${minutes.value} min`);if(speed.value)c.push(`${speed.value} mph`);if(incline.value)c.push(`${incline.value}% incline`);if(hr.value)c.push(`HR ${hr.value}`);if(talk.checked)c.push('talk test OK');if(symptoms.checked)c.push('SYMPTOMS');let x=read();x.push({date:date.value,cardio:c.join(' · '),strength,feel:feel.value});localStorage.setItem('workouts',JSON.stringify(x));render();alert('Workout saved on this device.');};clear.onclick=()=>{if(confirm('Delete all saved workouts from this device?')){localStorage.removeItem('workouts');render();}};render();</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+	<meta name="theme-color" content="#126e5a">
+	<title>Workout Tracker</title>
+	<style>
+		:root{--green:#126e5a;--dark:#093f35;--mint:#e8f7f1;--blue:#eaf4ff;--gold:#fff4d8;--rose:#fff0ee;--ink:#15211e;--muted:#5d6d67;--line:#d5e4de;--white:#fff}
+		*{box-sizing:border-box}
+		body{margin:0;background:linear-gradient(160deg,#e6f5ef 0%,#f6f9f7 55%,#eaf3ff 100%);color:var(--ink);font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:16px 14px 42px;min-height:100vh}
+		main{max-width:650px;margin:auto}
+		h1{font-size:27px;margin:4px 0;color:var(--dark)}
+		h2{font-size:18px;margin:0 0 12px;color:var(--dark)}
+		.sub{color:var(--muted);margin:0 0 16px}
+		.card{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:15px;margin:12px 0;box-shadow:0 3px 14px #0d413012}
+		.card:nth-of-type(2){border-top:5px solid #126e5a}
+		.card:nth-of-type(3){border-top:5px solid #2672b8}
+		.card:nth-of-type(4){border-top:5px solid #e1a424}
+		.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+		.machines{display:grid;grid-template-columns:1fr 70px 62px 62px;gap:8px;align-items:center}
+		.machines b{font-size:13px;color:#466057}
+		label{display:block;font-weight:700;font-size:13px;color:#344b43;margin-bottom:4px}
+		input{width:100%;border:1px solid #b9cec5;border-radius:9px;padding:10px;font-size:16px;background:#fbfefd;color:var(--ink)}
+		input:focus{outline:3px solid #9cdbc84f;border-color:var(--green)}
+		input[type=checkbox]{width:21px;height:21px;accent-color:var(--green)}
+		button{border:0;border-radius:11px;padding:12px 14px;font-size:16px;font-weight:750;cursor:pointer}
+		.save{width:100%;background:linear-gradient(135deg,#16866d,#0e624f);color:#fff;margin-top:4px;box-shadow:0 3px 7px #0e624f45}
+		.danger{background:var(--rose);color:#aa2a20;font-size:14px}
+		.note{font-size:13px;color:var(--muted);line-height:1.35}
+		.row{display:flex;gap:8px;align-items:center;justify-content:space-between}
+		.history{margin:0;padding-left:20px}
+		.history li{padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+		.tag{font-weight:750;color:var(--green)}
+		.checkrow{display:flex;gap:10px;align-items:center;margin-top:12px;font-weight:650}
+		.small{font-size:12px;color:var(--muted)}
+		@media(max-width:390px){.machines{grid-template-columns:1fr 60px 54px 54px;gap:5px}.machines input{padding:8px;font-size:15px}}
+	</style>
+</head>
+<body>
+	<main>
+		<h1>🏃 Workout Tracker</h1>
+		<p class="sub">Machines • weight • sets • reps • cardio • heart rate</p>
+
+		<section class="card">
+			<div class="grid">
+				<div>
+					<label>Date</label>
+					<input id="date" type="date">
+				</div>
+				<div>
+					<label>How did you feel?</label>
+					<input id="feel" placeholder="Good, tired, sore...">
+				</div>
+			</div>
+		</section>
+
+		<section class="card">
+			<h2>💪 Strength machines</h2>
+			<div class="machines"><b>Machine</b><b>Wt. lb</b><b>Sets</b><b>Reps</b></div>
+			<div id="machineRows"></div>
+			<p class="note">Use light-to-moderate weight. Breathe continuously; do not hold your breath.</p>
+		</section>
+
+		<section class="card">
+			<h2>❤️ Cardio</h2>
+			<div class="grid">
+				<div><label>Minutes</label><input id="minutes" type="number" min="0" step="1" placeholder="15"></div>
+				<div><label>Peak HR (bpm)</label><input id="hr" type="number" min="0" step="1" placeholder="120"></div>
+				<div><label>Speed (mph)</label><input id="speed" type="number" min="0" step="0.1" placeholder="2.5"></div>
+				<div><label>Incline (%)</label><input id="incline" type="number" min="0" step="0.5" placeholder="2.5"></div>
+			</div>
+			<label class="checkrow"><input id="talk" type="checkbox"> I could talk in short sentences</label>
+		</section>
+
+		<section class="card">
+			<h2>⚠️ Safety check</h2>
+			<label class="checkrow"><input id="symptoms" type="checkbox"> I had chest pain, dizziness, faintness, or unusual shortness of breath</label>
+			<p class="note">If checked, stop exercising and seek medical advice urgently for severe or persistent symptoms.</p>
+		</section>
+
+		<button class="save" id="save">Save workout</button>
+
+		<section class="card">
+			<div class="row"><h2>📋 Recent workouts</h2><button class="danger" id="clear">Clear history</button></div>
+			<ol class="history" id="history"></ol>
+		</section>
+	</main>
+
+	<script>
+		const machines=['Leg press','Seated leg curl','Leg extension','Chest press','Seated row','Lateral raise','Arm curl','Arm extension','Ab crunch / torso rotation'];
+		// defaults for weight (lb) and reps from the provided list
+		const defaults=[
+			{w:150,r:15},
+			{w:90,r:15},
+			{w:90,r:15},
+			{w:90,r:10},
+			{w:90,r:15},
+			{w:50,r:12},
+			{w:60,r:12},
+			{w:60,r:12},
+			{w:60,r:10}
+		];
+
+		const rows=document.getElementById('machineRows');
+		rows.innerHTML=machines.map((m,i)=>{
+			return `<div class="machines" style="margin-top:9px">`+
+				`<div style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="c${i}" title="Mark ${m} complete"><label style="margin:0;font-size:14px">${m}</label></div>`+
+				`<input id="w${i}" type="number" min="0" step="5" placeholder="lb" value="${defaults[i].w}">`+
+				`<input id="s${i}" type="number" min="0" max="9" placeholder="2" value="2">`+
+				`<input id="r${i}" type="number" min="0" max="99" placeholder="10" value="${defaults[i].r}">`+
+			`</div>`;
+		}).join('');
+
+		date.value=new Date().toISOString().slice(0,10);
+		const read=()=>JSON.parse(localStorage.getItem('workouts')||'[]');
+		const render=()=>{
+			let x=read();
+			history.innerHTML = x.length
+				? x.slice().reverse().map(w=>`<li><span class="tag">${w.date}</span> — ${w.cardio||'No cardio'}${w.strength?'; '+w.strength:''}${w.totalMoved? ' · Total moved: '+w.totalMoved+' lb':''}${w.feel?' · '+w.feel:''}</li>`).join('')
+				: '<li class="small">No saved workouts yet.</li>';
+		};
+
+		save.onclick=()=>{
+			// Build strength string and compute total weight moved (lb)
+			let totalMoved = 0;
+			const strength = machines.map((m,i)=>{
+				const w = Number(document.getElementById('w'+i).value) || 0;
+				const s = Number(document.getElementById('s'+i).value) || 0;
+				const r = Number(document.getElementById('r'+i).value) || 0;
+				const done = document.getElementById('c'+i).checked;
+				// accumulate total weight moved: weight * sets * reps
+				totalMoved += w * s * r;
+				return (w||s||r) ? `${m}: ${w} lb, ${s}×${r}${done ? ' ✓' : ''}` : '';
+			}).filter(Boolean).join(', ');
+
+			const c=[];
+			if(minutes.value) c.push(`${minutes.value} min`);
+			if(speed.value) c.push(`${speed.value} mph`);
+			if(incline.value) c.push(`${incline.value}% incline`);
+			if(hr.value) c.push(`HR ${hr.value}`);
+			if(talk.checked) c.push('talk test OK');
+			if(symptoms.checked) c.push('SYMPTOMS');
+
+			let x=read();
+			x.push({date:date.value,cardio:c.join(' · '),strength,feel:feel.value,totalMoved: totalMoved});
+			localStorage.setItem('workouts',JSON.stringify(x));
+			render();
+			alert(`Workout saved on this device. Total weight moved: ${totalMoved.toLocaleString()} lb`);
+		};
+
+		clear.onclick=()=>{ if(confirm('Delete all saved workouts from this device?')){ localStorage.removeItem('workouts'); render(); } };
+		render();
+	</script>
+</body>
+</html>
