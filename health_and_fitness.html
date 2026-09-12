@@ -648,6 +648,15 @@
       showToast.timer = setTimeout(() => toast.classList.remove('show'), 1800);
     };
 
+    const isValidWorkout = (workout) => {
+      if (!workout || typeof workout !== 'object' || Array.isArray(workout)) return false;
+      if (typeof workout.date !== 'string' || !workout.date.trim()) return false;
+
+      const optionalStringFields = ['cardio', 'strength', 'feel', 'goal', 'energy', 'recovery', 'notes'];
+      return optionalStringFields.every((field) => workout[field] == null || typeof workout[field] === 'string')
+        && (workout.totalMoved == null || Number.isFinite(workout.totalMoved));
+    };
+
     const render = () => {
       let x = read();
       historyEl.innerHTML = x.length
@@ -719,11 +728,13 @@
         const data = localStorage.getItem('workouts') || '[]';
         const blob = new Blob([data], { type: 'application/json' });
         const fileName = `workouts-${new Date().toISOString().slice(0, 10)}.json`;
-        const shareFile = new File([blob], fileName, { type: 'application/json' });
 
-        if (navigator.canShare && navigator.canShare({ files: [shareFile] })) {
-          await navigator.share({ files: [shareFile], title: 'Workout export', text: 'My workout data' });
-          return;
+        if (typeof File === 'function') {
+          const shareFile = new File([blob], fileName, { type: 'application/json' });
+          if (navigator.canShare && navigator.canShare({ files: [shareFile] })) {
+            await navigator.share({ files: [shareFile], title: 'Workout export', text: 'My workout data' });
+            return;
+          }
         }
 
         const url = URL.createObjectURL(blob);
@@ -733,7 +744,7 @@
         document.body.appendChild(a);
         a.click();
         a.remove();
-        URL.revokeObjectURL(url);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
         showToast('Workout data exported.');
       } catch (error) {
         console.error(error);
@@ -753,7 +764,9 @@
       reader.onload = () => {
         try {
           const parsed = JSON.parse(reader.result);
-          if (!Array.isArray(parsed)) throw new Error('Invalid backup format.');
+          if (!Array.isArray(parsed) || !parsed.every(isValidWorkout)) {
+            throw new Error('Invalid backup format.');
+          }
           localStorage.setItem('workouts', JSON.stringify(parsed));
           render();
           showToast('Workout data imported.');
