@@ -342,6 +342,14 @@
       border: 1px solid rgba(18, 110, 90, 0.12);
     }
 
+    .file-control {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      cursor: pointer;
+    }
+
     .danger {
       background: linear-gradient(180deg, #fff0ee, #ffe8e5);
       color: #a3342e;
@@ -412,6 +420,18 @@
       color: var(--muted);
       font-size: 0.92rem;
       padding: 10px 0 0;
+    }
+
+    .visually-hidden-input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }
 
     @media (max-width: 560px) {
@@ -552,8 +572,8 @@
       <button class="save" id="save">Save workout</button>
       <button class="secondary" id="reset">Reset</button>
       <button class="secondary" id="export">Export data</button>
-      <button class="secondary" id="import">Import backup</button>
-      <input id="import-file" type="file" accept="application/json" aria-label="Choose a workout backup file to replace saved workouts" hidden>
+      <label class="secondary file-control" for="import-file">Import backup</label>
+      <input id="import-file" class="visually-hidden-input" type="file" accept="application/json" aria-label="Choose a workout backup file to replace saved workouts">
     </div>
 
     <section class="card">
@@ -565,7 +585,9 @@
     </section>
   </main>
 
+  <script src="health_and_fitness_logic.js"></script>
   <script>
+    const { isValidWorkout, summarizeStrengthEntries } = window.HealthFitnessLogic;
     const machines = [
       'Leg press',
       'Seated leg curl',
@@ -586,7 +608,6 @@
     const resetButton = document.getElementById('reset');
     const clearButton = document.getElementById('clear');
     const exportButton = document.getElementById('export');
-    const importButton = document.getElementById('import');
     const importFile = document.getElementById('import-file');
     const toast = document.getElementById('toast');
     const date = document.getElementById('date');
@@ -648,15 +669,6 @@
       showToast.timer = setTimeout(() => toast.classList.remove('show'), 1800);
     };
 
-    const isValidWorkout = (workout) => {
-      if (!workout || typeof workout !== 'object' || Array.isArray(workout)) return false;
-      if (typeof workout.date !== 'string' || !workout.date.trim()) return false;
-
-      const optionalStringFields = ['cardio', 'strength', 'feel', 'goal', 'energy', 'recovery', 'notes'];
-      return optionalStringFields.every((field) => workout[field] == null || typeof workout[field] === 'string')
-        && (workout.totalMoved == null || Number.isFinite(workout.totalMoved));
-    };
-
     const render = () => {
       let x = read();
       historyEl.innerHTML = x.length
@@ -676,14 +688,11 @@
     };
 
     saveButton.onclick = () => {
-      let totalMoved = 0;
-      const strength = machines.map((m, i) => {
-        const w = Number(document.getElementById('w' + i).value) || 0;
-        const s = Number(document.getElementById('s' + i).value) || 0;
-        const r = Number(document.getElementById('r' + i).value) || 0;
-        totalMoved += w * s * r;
-        return w || s || r ? `${m}: ${w} lb, ${s}×${r}` : '';
-      }).filter(Boolean).join(', ');
+      const { strength, totalMoved } = summarizeStrengthEntries(machines, (index) => ({
+        weight: document.getElementById('w' + index).value,
+        sets: document.getElementById('s' + index).value,
+        reps: document.getElementById('r' + index).value
+      }));
 
       const cardio = [];
       if (minutes.value) cardio.push(`${minutes.value} min`);
@@ -795,9 +804,8 @@
       };
       reader.readAsText(file);
     }
-
     exportButton.onclick = () => exportData();
-    importButton.onclick = () => importFile.click();
+    exportButton.onclick = () => exportData();
     importFile.addEventListener('change', (event) => {
       const file = event.target.files && event.target.files[0];
       if (file) importDataFile(file);

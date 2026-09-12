@@ -1,0 +1,34 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+
+const { isValidWorkout, summarizeStrengthEntries } = require('./health_and_fitness_logic');
+
+test('summarizeStrengthEntries computes total moved', () => {
+  const machines = ['Leg press', 'Chest press'];
+  const { strength, totalMoved } = summarizeStrengthEntries(machines, (index) => [
+    { weight: '150', sets: '2', reps: '10' },
+    { weight: '90', sets: '3', reps: '8' }
+  ][index]);
+
+  assert.equal(totalMoved, 5160);
+  assert.equal(strength, 'Leg press: 150 lb, 2×10, Chest press: 90 lb, 3×8');
+});
+
+test('summarizeStrengthEntries keeps partially filled rows', () => {
+  const machines = ['Leg curl', 'Row'];
+  const { strength, totalMoved } = summarizeStrengthEntries(machines, (index) => [
+    { weight: '90', sets: '', reps: '12' },
+    { weight: '', sets: '', reps: '' }
+  ][index]);
+
+  assert.equal(totalMoved, 0);
+  assert.equal(strength, 'Leg curl: 90 lb, 0×12');
+});
+
+test('isValidWorkout rejects unexpected properties', () => {
+  assert.equal(isValidWorkout({
+    date: '2026-09-12',
+    cardio: '20 min',
+    unexpected: true
+  }), false);
+});
