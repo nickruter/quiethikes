@@ -696,7 +696,7 @@
             const summary = [];
             if (w.cardio) summary.push(w.cardio);
             if (w.strength) summary.push(w.strength);
-            if (w.caloriesBurned) summary.push(`Calories: ${w.caloriesBurned} cal`);
+            if (typeof w.caloriesBurned === 'number') summary.push(`Calories: ${w.caloriesBurned} cal`);
             if (w.feel) summary.push(w.feel);
             if (w.goal) summary.push(`Goal: ${w.goal}`);
             if (w.energy) summary.push(`Energy: ${w.energy}`);
