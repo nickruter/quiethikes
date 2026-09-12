@@ -741,7 +741,7 @@
     };
 
     const shareExport = async (blob, fileName) => {
-      if (typeof File !== 'function' || !navigator.canShare) return false;
+      if (typeof File !== 'function' || typeof navigator.canShare !== 'function' || typeof navigator.share !== 'function') return false;
 
       const shareFile = new File([blob], fileName, { type: 'application/json' });
       if (!navigator.canShare({ files: [shareFile] })) return false;
@@ -777,6 +777,7 @@
       const reader = new FileReader();
       reader.onload = () => {
         try {
+          if (typeof reader.result !== 'string') throw new Error('invalid-file');
           const parsed = JSON.parse(reader.result);
           if (!Array.isArray(parsed) || !parsed.every(isValidWorkout)) {
             throw new Error('invalid-structure');
