@@ -25,6 +25,18 @@ test('summarizeStrengthEntries keeps partially filled rows', () => {
   assert.equal(strength, 'Leg curl: 90 lb, 0×12');
 });
 
+test('summarizeStrengthEntries ignores non-numeric junk-only rows', () => {
+  const machines = ['Leg curl'];
+  const { strength, totalMoved } = summarizeStrengthEntries(machines, () => ({
+    weight: 'abc',
+    sets: '',
+    reps: ''
+  }));
+
+  assert.equal(totalMoved, 0);
+  assert.equal(strength, '');
+});
+
 test('isValidWorkout rejects unexpected properties', () => {
   assert.equal(isValidWorkout({
     date: '2026-09-12',

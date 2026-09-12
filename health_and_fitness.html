@@ -794,6 +794,7 @@
         try {
           const parsed = parseImportedWorkouts(reader.result);
           localStorage.setItem('workouts', JSON.stringify(parsed));
+          resetForm();
           render(parsed);
           showToast('Workout data imported.');
         } catch (error) {
