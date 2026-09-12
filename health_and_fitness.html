@@ -669,8 +669,8 @@
       showToast.timer = setTimeout(() => toast.classList.remove('show'), 1800);
     };
 
-    const render = () => {
-      let x = read();
+    const render = (workouts = read()) => {
+      let x = workouts;
       historyEl.innerHTML = x.length
         ? x.slice().reverse().map(w => {
             const summary = [];
@@ -789,7 +789,7 @@
         try {
           const parsed = parseImportedWorkouts(reader.result);
           localStorage.setItem('workouts', JSON.stringify(parsed));
-          render();
+          render(parsed);
           showToast('Workout data imported.');
         } catch (error) {
           console.error(error);
