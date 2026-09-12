@@ -669,7 +669,7 @@
             if (w.energy) summary.push(`Energy: ${w.energy}`);
             if (w.recovery) summary.push(`Recovery: ${w.recovery}`);
             if (w.notes) summary.push(w.notes);
-            if (w.totalMoved) summary.push(`Total moved: ${w.totalMoved} lb`);
+            if (w.totalMoved != null) summary.push(`Total moved: ${w.totalMoved} lb`);
             return `<li><span class="history-date">${w.date}</span><div class="history-copy">${summary.join(' · ')}</div></li>`;
           }).join('')
         : '<li class="small">No saved workouts yet.</li>';
@@ -747,6 +747,7 @@
         setTimeout(() => URL.revokeObjectURL(url), 1000);
         showToast('Workout data exported.');
       } catch (error) {
+        if (error && error.name === 'AbortError') return;
         console.error(error);
         try {
           await navigator.clipboard.writeText(localStorage.getItem('workouts') || '[]');
