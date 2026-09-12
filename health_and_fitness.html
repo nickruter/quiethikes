@@ -1,2 +1,717 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#126e5a"><title>Workout Tracker</title><style>
-:root{--green:#126e5a;--dark:#093f35;--mint:#e8f7f1;--blue:#eaf4ff;--gold:#fff4d8;--rose:#fff0ee;--ink:#15211e;--muted:#5d6d67;--line:#d5e4de;--white:#fff}*{box-sizing:border-box}body{margin:0;background:linear-gradient(160deg,#e6f5ef 0%,#f6f9f7 55%,#eaf3ff 100%);color:var(--ink);font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:16px 14px 42px;min-height:100vh}main{max-width:650px;margin:auto}h1{font-size:27px;margin:4px 0;color:var(--dark)}h2{font-size:18px;margin:0 0 12px;color:var(--dark)}.sub{color:var(--muted);margin:0 0 16px}.card{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:15px;margin:12px 0;box-shadow:0 3px 14px #0d413012}.card:nth-of-type(2){border-top:5px solid #126e5a}.card:nth-of-type(3){border-top:5px solid #2672b8}.card:nth-of-type(4){border-top:5px solid #e1a424}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.machines{display:grid;grid-template-columns:1fr 70px 62px 62px;gap:8px;align-items:center}.machines b{font-size:13px;color:#466057}label{display:block;font-weight:700;font-size:13px;color:#344b43;margin-bottom:4px}input{width:100%;border:1px solid #b9cec5;border-radius:9px;padding:10px;font-size:16px;background:#fbfefd;color:var(--ink)}input:focus{outline:3px solid #9cdbc84f;border-color:var(--green)}input[type=checkbox]{width:21px;height:21px;accent-color:var(--green)}button{border:0;border-radius:11px;padding:12px 14px;font-size:16px;font-weight:750;cursor:pointer}.save{width:100%;background:linear-gradient(135deg,#16866d,#0e624f);color:#fff;margin-top:4px;box-shadow:0 3px 7px #0e624f45}.danger{background:var(--rose);color:#aa2a20;font-size:14px}.note{font-size:13px;color:var(--muted);line-height:1.35}.row{display:flex;gap:8px;align-items:center;justify-content:space-between}.history{margin:0;padding-left:20px}.history li{padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}.tag{font-weight:750;color:var(--green)}.checkrow{display:flex;gap:10px;align-items:center;margin-top:12px;font-weight:650}.small{font-size:12px;color:var(--muted)}@media(max-width:390px){.machines{grid-template-columns:1fr 60px 54px 54px;gap:5px}.machines input{padding:8px;font-size:15px}}</style></head><body><main><h1>🏃 Workout Tracker</h1><p class="sub">Machines • weight • sets • reps • cardio • heart rate</p><section class="card"><div class="grid"><div><label>Date</label><input id="date" type="date"></div><div><label>How did you feel?</label><input id="feel" placeholder="Good, tired, sore..."></div></div></section><section class="card"><h2>💪 Strength machines</h2><div class="machines"><b>Machine</b><b>Wt. lb</b><b>Sets</b><b>Reps</b></div><div id="machineRows"></div><p class="note">Use light-to-moderate weight. Breathe continuously; do not hold your breath.</p></section><section class="card"><h2>❤️ Cardio</h2><div class="grid"><div><label>Minutes</label><input id="minutes" type="number" min="0" step="1" placeholder="15"></div><div><label>Peak HR (bpm)</label><input id="hr" type="number" min="0" step="1" placeholder="120"></div><div><label>Speed (mph)</label><input id="speed" type="number" min="0" step="0.1" placeholder="2.5"></div><div><label>Incline (%)</label><input id="incline" type="number" min="0" step="0.5" placeholder="2.5"></div></div><label class="checkrow"><input id="talk" type="checkbox"> I could talk in short sentences</label></section><section class="card"><h2>⚠️ Safety check</h2><label class="checkrow"><input id="symptoms" type="checkbox"> I had chest pain, dizziness, faintness, or unusual shortness of breath</label><p class="note">If checked, stop exercising and seek medical advice urgently for severe or persistent symptoms.</p></section><button class="save" id="save">Save workout</button><section class="card"><div class="row"><h2>📋 Recent workouts</h2><button class="danger" id="clear">Clear history</button></div><ol class="history" id="history"></ol></section></main><script>const machines=['Leg press','Seated leg curl','Leg extension','Chest press','Seated row','Lateral raise','Arm curl','Arm extension','Ab crunch / torso rotation'];const rows=document.getElementById('machineRows');rows.innerHTML=machines.map((m,i)=>`<div class="machines" style="margin-top:9px"><label style="margin:0;font-size:14px">${m}</label><input id="w${i}" type="number" min="0" step="5" placeholder="lb"><input id="s${i}" type="number" min="0" max="9" placeholder="2"><input id="r${i}" type="number" min="0" max="99" placeholder="10"></div>`).join('');date.value=new Date().toISOString().slice(0,10);const read=()=>JSON.parse(localStorage.getItem('workouts')||'[]');const render=()=>{let x=read();history.innerHTML=x.length?x.slice().reverse().map(w=>`<li><span class="tag">${w.date}</span> — ${w.cardio||'No cardio'}${w.strength?'; '+w.strength:''}${w.feel?' · '+w.feel:''}</li>`).join(''):'<li class="small">No saved workouts yet.</li>'};save.onclick=()=>{const strength=machines.map((m,i)=>{let w=document.getElementById('w'+i).value,s=document.getElementById('s'+i).value,r=document.getElementById('r'+i).value;return w||s||r?`${m}: ${w||0} lb, ${s||0}×${r||0}`:''}).filter(Boolean).join(', ');const c=[];if(minutes.value)c.push(`${minutes.value} min`);if(speed.value)c.push(`${speed.value} mph`);if(incline.value)c.push(`${incline.value}% incline`);if(hr.value)c.push(`HR ${hr.value}`);if(talk.checked)c.push('talk test OK');if(symptoms.checked)c.push('SYMPTOMS');let x=read();x.push({date:date.value,cardio:c.join(' · '),strength,feel:feel.value});localStorage.setItem('workouts',JSON.stringify(x));render();alert('Workout saved on this device.');};clear.onclick=()=>{if(confirm('Delete all saved workouts from this device?')){localStorage.removeItem('workouts');render();}};render();</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#126e5a">
+  <title>Quiet Hikes | Health & Fitness</title>
+  <style>
+    :root {
+      --green: #126e5a;
+      --green-deep: #093f35;
+      --green-soft: #e8f7f1;
+      --green-soft-2: #dff6ef;
+      --blue: #eaf4ff;
+      --gold: #fff4d8;
+      --rose: #fff0ee;
+      --ink: #13231f;
+      --muted: #5d6d67;
+      --line: #d7e9e1;
+      --white: #ffffff;
+      --shadow: 0 18px 40px rgba(8, 52, 42, 0.12);
+      --shadow-soft: 0 12px 28px rgba(18, 110, 90, 0.09);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(27, 156, 118, 0.18), transparent 30%),
+        linear-gradient(160deg, #edf9f4 0%, #f5f8f7 48%, #edf4ff 100%);
+      color: var(--ink);
+      font: 16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 20px 14px 42px;
+    }
+
+    main {
+      max-width: 780px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid rgba(18, 110, 90, 0.08);
+      border-radius: 22px;
+      padding: 18px 18px 16px;
+      margin: 16px 0;
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(2px);
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 24px 22px 18px;
+      background: linear-gradient(135deg, #f4fbf8 0%, #ffffff 52%, #eef7ff 100%);
+      border-top: 5px solid var(--green);
+      box-shadow: var(--shadow);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto -40px -50px auto;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: rgba(18, 110, 90, 0.06);
+    }
+
+    .hero-top {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .eyebrow {
+      margin: 0 0 6px;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      font-weight: 900;
+      color: var(--green);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.2rem, 5vw, 3rem);
+      line-height: 1;
+      letter-spacing: -0.06em;
+      color: var(--green-deep);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--green-soft), #dff7ef);
+      border: 1px solid rgba(18, 110, 90, 0.12);
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+    }
+
+    .sub {
+      position: relative;
+      z-index: 1;
+      margin: 2px 0 18px;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 0.98rem;
+    }
+    .mini-summary {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0 0 18px;
+    }
+
+    .mini-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(255, 255, 255, 0.76);
+      border: 1px solid rgba(18, 110, 90, 0.1);
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-size: 0.76rem;
+      font-weight: 800;
+      color: var(--green-deep);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .mini-pill strong {
+      color: var(--green);
+      font-size: 0.82rem;
+    }
+    .quick-grid {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .stat-field {
+      background: linear-gradient(180deg, rgba(255,255,255,0.8), #f8fffb);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 10px 12px 12px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+    }
+
+    .stat-label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 900;
+      color: var(--muted);
+    }
+
+    .stat-field input,
+    .stat-field select,
+    .stack input,
+    .stack select,
+    textarea {
+      width: 100%;
+      border: 1px solid #bfd9d0;
+      border-radius: 10px;
+      padding: 10px 11px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      box-shadow: inset 0 1px 2px rgba(19, 35, 31, 0.02);
+    }
+
+    .stat-field input:focus,
+    .stack input:focus,
+    .stack select:focus,
+    textarea:focus {
+      outline: 3px solid rgba(18, 110, 90, 0.12);
+      border-color: var(--green);
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 1.14rem;
+      color: var(--green-deep);
+      letter-spacing: -0.02em;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .stack {
+      display: grid;
+      gap: 10px;
+    }
+
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .machines {
+      display: grid;
+      grid-template-columns: minmax(0, 1.5fr) 70px 62px 62px;
+      gap: 8px;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .machines b {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+    }
+
+    .machines label {
+      margin: 0;
+      font-size: 12px;
+      text-transform: none;
+      letter-spacing: normal;
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .machines input {
+      width: 100%;
+      border: 1px solid #bfd9d0;
+      border-radius: 9px;
+      padding: 8px 9px;
+      font: inherit;
+      background: #fff;
+    }
+
+    .check-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 8px 12px;
+      margin-top: 12px;
+    }
+
+    .checkrow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1.4;
+      background: linear-gradient(180deg, #fbfffd, #f4fbf9);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--green);
+      flex: 0 0 auto;
+    }
+
+    textarea {
+      min-height: 92px;
+      resize: vertical;
+      margin-top: 8px;
+    }
+
+    .note {
+      margin-top: 8px;
+      font-size: 0.84rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 1rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    .action-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .save {
+      flex: 1;
+      width: auto;
+      background: linear-gradient(135deg, #16866d, #0d5f4e);
+      color: #fff;
+      box-shadow: 0 10px 22px rgba(18, 110, 90, 0.24);
+      margin-top: 2px;
+    }
+
+    .secondary {
+      flex: 0 0 auto;
+      background: #f4fbf8;
+      color: var(--green-deep);
+      border: 1px solid rgba(18, 110, 90, 0.12);
+    }
+
+    .danger {
+      background: linear-gradient(180deg, #fff0ee, #ffe8e5);
+      color: #a3342e;
+      font-size: 0.88rem;
+      padding: 9px 12px;
+      border: 1px solid rgba(163, 52, 46, 0.12);
+    }
+
+    .history {
+      margin: 0;
+      padding-left: 0;
+      list-style: none;
+    }
+
+    .history li {
+      list-style: none;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .history li:last-child {
+      border-bottom: 0;
+    }
+
+    .history-date {
+      display: inline-block;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--green-soft), #dff7ef);
+      color: var(--green);
+      font-size: 0.72rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 5px 8px;
+      margin-bottom: 6px;
+    }
+
+    .history-copy {
+      font-size: 0.96rem;
+      line-height: 1.6;
+      color: var(--ink);
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 20;
+      background: rgba(9, 63, 53, 0.96);
+      color: #fff;
+      border-radius: 12px;
+      padding: 11px 14px;
+      box-shadow: 0 20px 32px rgba(9, 63, 53, 0.2);
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 0.92rem;
+      padding: 10px 0 0;
+    }
+
+    @media (max-width: 560px) {
+      .quick-grid,
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .machines {
+        grid-template-columns: 1fr 62px 52px 52px;
+        gap: 6px;
+      }
+
+      .hero-top,
+      .row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .badge,
+      .danger {
+        align-self: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div id="toast" class="toast" aria-live="polite"></div>
+
+    <section class="card hero">
+      <div class="hero-top">
+        <div>
+          <p class="eyebrow">Quiet Hikes</p>
+          <h1>Health & Fitness Log</h1>
+        </div>
+        <span class="badge">Trail-ready</span>
+      </div>
+      <p class="sub">Track movement, recovery, and energy so your next trail day feels strong, balanced, and sustainable.</p>
+
+      <div class="quick-grid">
+        <div class="stat-field">
+          <span class="stat-label">Date</span>
+          <input id="date" type="date">
+        </div>
+        <div class="stat-field">
+          <span class="stat-label">Energy</span>
+          <select id="energy">
+            <option value="">Select</option>
+            <option>Very high</option>
+            <option>High</option>
+            <option>Steady</option>
+            <option>Low</option>
+            <option>Very low</option>
+          </select>
+        </div>
+        <div class="stat-field">
+          <span class="stat-label">Recovery</span>
+          <select id="recovery">
+            <option value="">Select</option>
+            <option>Excellent</option>
+            <option>Good</option>
+            <option>Okay</option>
+            <option>Needs rest</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="grid">
+        <div class="stack">
+          <div>
+            <label for="goal">Today's goal</label>
+            <input id="goal" type="text" placeholder="Easy cardio + light strength">
+          </div>
+          <div>
+            <label for="feel">How did you feel?</label>
+            <input id="feel" type="text" placeholder="Good, tired, sore, strong...">
+          </div>
+        </div>
+        <div class="stack">
+          <div>
+            <label for="notes">Notes</label>
+            <textarea id="notes" placeholder="Sleep, hydration, soreness, mobility, or trail plans..."></textarea>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>💪 Strength machines</h2>
+      <div class="machines">
+        <b>Machine</b>
+        <b>Wt. lb</b>
+        <b>Sets</b>
+        <b>Reps</b>
+      </div>
+      <div id="machineRows"></div>
+      <p class="note">Use light-to-moderate weight, move with control, and keep breathing steady throughout each set.</p>
+    </section>
+
+    <section class="card">
+      <h2>❤️ Cardio & recovery</h2>
+      <div class="grid">
+        <div>
+          <label for="minutes">Minutes</label>
+          <input id="minutes" type="number" min="0" step="1" placeholder="20">
+        </div>
+        <div>
+          <label for="hr">Peak HR (bpm)</label>
+          <input id="hr" type="number" min="0" step="1" placeholder="120">
+        </div>
+        <div>
+          <label for="speed">Speed (mph)</label>
+          <input id="speed" type="number" min="0" step="0.1" placeholder="2.5">
+        </div>
+        <div>
+          <label for="incline">Incline (%)</label>
+          <input id="incline" type="number" min="0" step="0.5" placeholder="2.5">
+        </div>
+      </div>
+
+      <div class="check-grid">
+        <label class="checkrow"><input id="talk" type="checkbox"> I could talk in short sentences</label>
+        <label class="checkrow"><input id="stretch" type="checkbox"> I stretched or did mobility work</label>
+        <label class="checkrow"><input id="hydrated" type="checkbox"> I drank water and stayed hydrated</label>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>⚠️ Safety check</h2>
+      <label class="checkrow"><input id="symptoms" type="checkbox"> I had chest pain, dizziness, faintness, or unusual shortness of breath</label>
+      <p class="note">If checked, stop exercising and seek medical advice urgently for severe or persistent symptoms.</p>
+    </section>
+
+    <div class="action-row">
+      <button class="save" id="save">Save workout</button>
+      <button class="secondary" id="reset">Reset</button>
+    </div>
+
+    <section class="card">
+      <div class="row">
+        <h2>📋 Recent workouts</h2>
+        <button class="danger" id="clear">Clear history</button>
+      </div>
+      <ol class="history" id="history"></ol>
+    </section>
+  </main>
+
+  <script>
+    const machines = [
+      'Leg press',
+      'Seated leg curl',
+      'Leg extension',
+      'Chest press',
+      'Seated row',
+      'Lateral raise',
+      'Arm curl',
+      'Arm extension',
+      'Back extension',
+      'Ab crunch',
+      'Ab crunch / torso rotation'
+    ];
+
+    const rows = document.getElementById('machineRows');
+    const historyEl = document.getElementById('history');
+    const saveButton = document.getElementById('save');
+    const resetButton = document.getElementById('reset');
+    const clearButton = document.getElementById('clear');
+    const toast = document.getElementById('toast');
+    const date = document.getElementById('date');
+    const minutes = document.getElementById('minutes');
+    const speed = document.getElementById('speed');
+    const incline = document.getElementById('incline');
+    const hr = document.getElementById('hr');
+    const talk = document.getElementById('talk');
+    const stretch = document.getElementById('stretch');
+    const hydrated = document.getElementById('hydrated');
+    const symptoms = document.getElementById('symptoms');
+    const feel = document.getElementById('feel');
+
+    const resetForm = () => {
+      const resetable = [
+        'date','goal','feel','notes','minutes','hr','speed','incline',
+        'energy','recovery','talk','stretch','hydrated','symptoms'
+      ];
+
+      resetable.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (el.type === 'checkbox') el.checked = false;
+        else if (el.tagName === 'SELECT' || el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.value = '';
+      });
+
+      for (let i = 0; i < machines.length; i++) {
+        document.getElementById('w' + i).value = '';
+        document.getElementById('s' + i).value = '';
+        document.getElementById('r' + i).value = '';
+      }
+
+      date.value = new Date().toISOString().slice(0, 10);
+    };
+
+    rows.innerHTML = machines.map((m, i) => `
+      <div class="machines" style="margin-top:9px">
+        <label>${m}</label>
+        <input id="w${i}" type="number" min="0" step="5" placeholder="lb">
+        <input id="s${i}" type="number" min="0" max="9" placeholder="2">
+        <input id="r${i}" type="number" min="0" max="99" placeholder="10">
+      </div>
+    `).join('');
+
+    date.value = new Date().toISOString().slice(0, 10);
+
+    const read = () => {
+      try {
+        return JSON.parse(localStorage.getItem('workouts') || '[]');
+      } catch (error) {
+        return [];
+      }
+    };
+
+    const showToast = (message) => {
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toast.classList.remove('show'), 1800);
+    };
+
+    const render = () => {
+      let x = read();
+      historyEl.innerHTML = x.length
+        ? x.slice().reverse().map(w => {
+            const summary = [];
+            if (w.cardio) summary.push(w.cardio);
+            if (w.strength) summary.push(w.strength);
+            if (w.feel) summary.push(w.feel);
+            if (w.goal) summary.push(`Goal: ${w.goal}`);
+            if (w.energy) summary.push(`Energy: ${w.energy}`);
+            if (w.recovery) summary.push(`Recovery: ${w.recovery}`);
+            if (w.notes) summary.push(w.notes);
+            return `<li><span class="history-date">${w.date}</span><div class="history-copy">${summary.join(' · ')}</div></li>`;
+          }).join('')
+        : '<li class="small">No saved workouts yet.</li>';
+    };
+
+    saveButton.onclick = () => {
+      const strength = machines.map((m, i) => {
+        let w = document.getElementById('w' + i).value;
+        let s = document.getElementById('s' + i).value;
+        let r = document.getElementById('r' + i).value;
+        return w || s || r ? `${m}: ${w || 0} lb, ${s || 0}×${r || 0}` : '';
+      }).filter(Boolean).join(', ');
+
+      const cardio = [];
+      if (minutes.value) cardio.push(`${minutes.value} min`);
+      if (speed.value) cardio.push(`${speed.value} mph`);
+      if (incline.value) cardio.push(`${incline.value}% incline`);
+      if (hr.value) cardio.push(`HR ${hr.value}`);
+      if (talk.checked) cardio.push('talk test OK');
+      if (stretch.checked) cardio.push('mobility');
+      if (hydrated.checked) cardio.push('hydrated');
+      if (symptoms.checked) cardio.push('SYMPTOMS');
+
+      const goal = document.getElementById('goal').value.trim();
+      const energy = document.getElementById('energy').value;
+      const recovery = document.getElementById('recovery').value;
+      const notes = document.getElementById('notes').value.trim();
+
+      let x = read();
+      x.push({
+        date: date.value,
+        cardio: cardio.join(' · '),
+        strength,
+        feel: feel.value,
+        goal,
+        energy,
+        recovery,
+        notes
+      });
+
+      localStorage.setItem('workouts', JSON.stringify(x));
+      render();
+      showToast('Workout saved on this device.');
+    };
+
+    resetButton.onclick = () => {
+      resetForm();
+      showToast('Form reset.');
+    };
+
+    clearButton.onclick = () => {
+      if (confirm('Delete all saved workouts from this device?')) {
+        localStorage.removeItem('workouts');
+        render();
+      }
+    };
+
+    render();
+  </script>
+</body>
+</html>
