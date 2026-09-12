@@ -152,7 +152,7 @@
       position: relative;
       z-index: 1;
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 12px;
     }
 
@@ -458,6 +458,10 @@
           <input id="date" type="date">
         </div>
         <div class="stat-field">
+          <span class="stat-label">Weight</span>
+          <input id="weight" type="number" min="0" step="1" placeholder="170 lb">
+        </div>
+        <div class="stat-field">
           <span class="stat-label">Energy</span>
           <select id="energy">
             <option value="">Select</option>
@@ -584,6 +588,7 @@
     const clearButton = document.getElementById('clear');
     const toast = document.getElementById('toast');
     const date = document.getElementById('date');
+    const weight = document.getElementById('weight');
     const minutes = document.getElementById('minutes');
     const speed = document.getElementById('speed');
     const incline = document.getElementById('incline');
@@ -593,10 +598,51 @@
     const hydrated = document.getElementById('hydrated');
     const symptoms = document.getElementById('symptoms');
     const feel = document.getElementById('feel');
+    const caloriesPreview = document.createElement('input');
+    caloriesPreview.type = 'text';
+    caloriesPreview.readOnly = true;
+    caloriesPreview.value = '0 cal';
+    caloriesPreview.style.width = '100%';
+    caloriesPreview.style.border = '1px solid #bfd9d0';
+    caloriesPreview.style.borderRadius = '10px';
+    caloriesPreview.style.padding = '10px 11px';
+    caloriesPreview.style.background = '#f5faf8';
+    caloriesPreview.style.color = '#093f35';
+    caloriesPreview.style.font = 'inherit';
+    caloriesPreview.style.fontWeight = '800';
+
+    const caloriesField = document.createElement('div');
+    caloriesField.className = 'stat-field';
+    caloriesField.innerHTML = '<span class="stat-label">Est. calories</span>';
+    caloriesField.appendChild(caloriesPreview);
+
+    const quickGrid = document.querySelector('.quick-grid');
+    quickGrid.appendChild(caloriesField);
+
+    const estimateCalories = () => {
+      const minutesValue = Number(minutes.value || 0);
+      const weightValue = Number(weight.value || 0);
+      if (!minutesValue || !weightValue) {
+        caloriesPreview.value = '0 cal';
+        return 0;
+      }
+
+      let met = 4.5;
+      if (talk.checked) met = 5.5;
+      if (Number(speed.value || 0) >= 3.5 || Number(hr.value || 0) >= 140) met = 8.5;
+      if (Number(incline.value || 0) >= 5) met += 1.2;
+      if (symptoms.checked) met = 0;
+
+      const kg = weightValue * 0.453592;
+      const burned = (met * 3.5 * kg * minutesValue) / 200;
+      const rounded = Math.round(burned);
+      caloriesPreview.value = `${rounded} cal`;
+      return rounded;
+    };
 
     const resetForm = () => {
       const resetable = [
-        'date','goal','feel','notes','minutes','hr','speed','incline',
+        'date','goal','feel','notes','minutes','hr','speed','incline','weight',
         'energy','recovery','talk','stretch','hydrated','symptoms'
       ];
 
@@ -613,6 +659,7 @@
         document.getElementById('r' + i).value = '';
       }
 
+      caloriesPreview.value = '0 cal';
       date.value = new Date().toISOString().slice(0, 10);
     };
 
@@ -649,6 +696,7 @@
             const summary = [];
             if (w.cardio) summary.push(w.cardio);
             if (w.strength) summary.push(w.strength);
+            if (w.caloriesBurned) summary.push(`Calories: ${w.caloriesBurned} cal`);
             if (w.feel) summary.push(w.feel);
             if (w.goal) summary.push(`Goal: ${w.goal}`);
             if (w.energy) summary.push(`Energy: ${w.energy}`);
@@ -658,6 +706,11 @@
           }).join('')
         : '<li class="small">No saved workouts yet.</li>';
     };
+
+    [minutes, speed, incline, hr, talk, stretch, hydrated, symptoms, weight].forEach((field) => {
+      field.addEventListener('input', estimateCalories);
+      field.addEventListener('change', estimateCalories);
+    });
 
     saveButton.onclick = () => {
       const strength = machines.map((m, i) => {
@@ -681,12 +734,14 @@
       const energy = document.getElementById('energy').value;
       const recovery = document.getElementById('recovery').value;
       const notes = document.getElementById('notes').value.trim();
+      const caloriesBurned = estimateCalories();
 
       let x = read();
       x.push({
         date: date.value,
         cardio: cardio.join(' · '),
         strength,
+        caloriesBurned,
         feel: feel.value,
         goal,
         energy,
