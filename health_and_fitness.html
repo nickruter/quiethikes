@@ -552,8 +552,8 @@
       <button class="save" id="save">Save workout</button>
       <button class="secondary" id="reset">Reset</button>
       <button class="secondary" id="export">Export data</button>
-      <button class="secondary" id="import">Import data</button>
-      <input id="import-file" type="file" accept="application/json" hidden>
+      <button class="secondary" id="import">Import backup</button>
+      <input id="import-file" type="file" accept="application/json" aria-label="Choose a workout backup file to replace saved workouts" hidden>
     </div>
 
     <section class="card">
@@ -723,56 +723,73 @@
       showToast('Form reset.');
     };
 
+    const downloadExport = (blob, fileName) => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      showToast('Workout data exported.');
+    };
+
+    const copyExportToClipboard = async (data) => {
+      await navigator.clipboard.writeText(data);
+      showToast('Export failed; data copied to clipboard.');
+    };
+
+    const shareExport = async (blob, fileName) => {
+      if (typeof File !== 'function' || !navigator.canShare) return false;
+
+      const shareFile = new File([blob], fileName, { type: 'application/json' });
+      if (!navigator.canShare({ files: [shareFile] })) return false;
+
+      await navigator.share({ files: [shareFile], title: 'Workout export', text: 'My workout data' });
+      return true;
+    };
+
     async function exportData() {
+      const data = localStorage.getItem('workouts') || '[]';
+      const blob = new Blob([data], { type: 'application/json' });
+      const fileName = `workouts-${new Date().toISOString().slice(0, 10)}.json`;
+
       try {
-        const data = localStorage.getItem('workouts') || '[]';
-        const blob = new Blob([data], { type: 'application/json' });
-        const fileName = `workouts-${new Date().toISOString().slice(0, 10)}.json`;
-
-        if (typeof File === 'function') {
-          const shareFile = new File([blob], fileName, { type: 'application/json' });
-          if (navigator.canShare && navigator.canShare({ files: [shareFile] })) {
-            await navigator.share({ files: [shareFile], title: 'Workout export', text: 'My workout data' });
-            return;
-          }
-        }
-
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-        showToast('Workout data exported.');
+        if (await shareExport(blob, fileName)) return;
+        downloadExport(blob, fileName);
       } catch (error) {
         if (error && error.name === 'AbortError') return;
         console.error(error);
         try {
-          await navigator.clipboard.writeText(localStorage.getItem('workouts') || '[]');
-          showToast('Export failed; data copied to clipboard.');
+          await copyExportToClipboard(data);
         } catch (clipboardError) {
-          alert('Export failed. See console for details.');
+          console.error(clipboardError);
+          alert('Unable to export workout data right now.');
         }
       }
     }
 
     function importDataFile(file) {
       if (!file) return;
+      if (!confirm('Importing this backup will replace the workouts currently saved on this device. Continue?')) return;
 
       const reader = new FileReader();
       reader.onload = () => {
         try {
           const parsed = JSON.parse(reader.result);
           if (!Array.isArray(parsed) || !parsed.every(isValidWorkout)) {
-            throw new Error('Invalid backup format.');
+            throw new Error('invalid-structure');
           }
           localStorage.setItem('workouts', JSON.stringify(parsed));
           render();
           showToast('Workout data imported.');
         } catch (error) {
-          alert(`Import failed: ${error.message || error}`);
+          console.error(error);
+          const message = error && error.name === 'SyntaxError'
+            ? 'Import failed. The selected file is not valid JSON.'
+            : 'Import failed. The selected file is not a valid workout backup.';
+          alert(message);
         }
       };
       reader.readAsText(file);
