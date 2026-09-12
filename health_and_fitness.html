@@ -551,6 +551,9 @@
     <div class="action-row">
       <button class="save" id="save">Save workout</button>
       <button class="secondary" id="reset">Reset</button>
+      <button class="secondary" id="export">Export data</button>
+      <button class="secondary" id="import">Import data</button>
+      <input id="import-file" type="file" accept="application/json" hidden>
     </div>
 
     <section class="card">
@@ -582,6 +585,9 @@
     const saveButton = document.getElementById('save');
     const resetButton = document.getElementById('reset');
     const clearButton = document.getElementById('clear');
+    const exportButton = document.getElementById('export');
+    const importButton = document.getElementById('import');
+    const importFile = document.getElementById('import-file');
     const toast = document.getElementById('toast');
     const date = document.getElementById('date');
     const minutes = document.getElementById('minutes');
@@ -654,17 +660,20 @@
             if (w.energy) summary.push(`Energy: ${w.energy}`);
             if (w.recovery) summary.push(`Recovery: ${w.recovery}`);
             if (w.notes) summary.push(w.notes);
+            if (w.totalMoved) summary.push(`Total moved: ${w.totalMoved} lb`);
             return `<li><span class="history-date">${w.date}</span><div class="history-copy">${summary.join(' · ')}</div></li>`;
           }).join('')
         : '<li class="small">No saved workouts yet.</li>';
     };
 
     saveButton.onclick = () => {
+      let totalMoved = 0;
       const strength = machines.map((m, i) => {
-        let w = document.getElementById('w' + i).value;
-        let s = document.getElementById('s' + i).value;
-        let r = document.getElementById('r' + i).value;
-        return w || s || r ? `${m}: ${w || 0} lb, ${s || 0}×${r || 0}` : '';
+        const w = Number(document.getElementById('w' + i).value) || 0;
+        const s = Number(document.getElementById('s' + i).value) || 0;
+        const r = Number(document.getElementById('r' + i).value) || 0;
+        totalMoved += w * s * r;
+        return w || s || r ? `${m}: ${w} lb, ${s}×${r}` : '';
       }).filter(Boolean).join(', ');
 
       const cardio = [];
@@ -691,18 +700,77 @@
         goal,
         energy,
         recovery,
-        notes
+        notes,
+        totalMoved
       });
 
       localStorage.setItem('workouts', JSON.stringify(x));
       render();
-      showToast('Workout saved on this device.');
+      showToast(`Workout saved. Total moved: ${totalMoved.toLocaleString()} lb.`);
     };
 
     resetButton.onclick = () => {
       resetForm();
       showToast('Form reset.');
     };
+
+    async function exportData() {
+      try {
+        const data = localStorage.getItem('workouts') || '[]';
+        const blob = new Blob([data], { type: 'application/json' });
+        const fileName = `workouts-${new Date().toISOString().slice(0, 10)}.json`;
+        const shareFile = new File([blob], fileName, { type: 'application/json' });
+
+        if (navigator.canShare && navigator.canShare({ files: [shareFile] })) {
+          await navigator.share({ files: [shareFile], title: 'Workout export', text: 'My workout data' });
+          return;
+        }
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        showToast('Workout data exported.');
+      } catch (error) {
+        console.error(error);
+        try {
+          await navigator.clipboard.writeText(localStorage.getItem('workouts') || '[]');
+          showToast('Export failed; data copied to clipboard.');
+        } catch (clipboardError) {
+          alert('Export failed. See console for details.');
+        }
+      }
+    }
+
+    function importDataFile(file) {
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(reader.result);
+          if (!Array.isArray(parsed)) throw new Error('Invalid backup format.');
+          localStorage.setItem('workouts', JSON.stringify(parsed));
+          render();
+          showToast('Workout data imported.');
+        } catch (error) {
+          alert(`Import failed: ${error.message || error}`);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    exportButton.onclick = () => exportData();
+    importButton.onclick = () => importFile.click();
+    importFile.addEventListener('change', (event) => {
+      const file = event.target.files && event.target.files[0];
+      if (file) importDataFile(file);
+      importFile.value = '';
+    });
 
     clearButton.onclick = () => {
       if (confirm('Delete all saved workouts from this device?')) {
