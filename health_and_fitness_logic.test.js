@@ -46,3 +46,10 @@ test('parseImportedWorkouts rejects invalid workout structure', () => {
     /invalid-structure/
   );
 });
+
+test('parseImportedWorkouts rejects non-string input', () => {
+  assert.throws(
+    () => parseImportedWorkouts(new Uint8Array([123, 125])),
+    /invalid-file/
+  );
+});

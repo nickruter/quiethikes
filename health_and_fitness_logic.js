@@ -19,12 +19,14 @@
 
   const isValidWorkout = (workout) => {
     if (!workout || typeof workout !== 'object' || Array.isArray(workout)) return false;
+    const prototype = Object.getPrototypeOf(workout);
+    if (prototype !== Object.prototype && prototype !== null) return false;
     if (typeof workout.date !== 'string' || !workout.date.trim()) return false;
     if (!Object.keys(workout).every((key) => ALLOWED_WORKOUT_KEYS.has(key))) return false;
 
     const optionalStringFields = ['cardio', 'strength', 'feel', 'goal', 'energy', 'recovery', 'notes'];
-    return optionalStringFields.every((field) => workout[field] == null || typeof workout[field] === 'string')
-      && (workout.totalMoved == null || Number.isFinite(workout.totalMoved));
+    return optionalStringFields.every((field) => !Object.prototype.hasOwnProperty.call(workout, field) || typeof workout[field] === 'string')
+      && (!Object.prototype.hasOwnProperty.call(workout, 'totalMoved') || Number.isFinite(workout.totalMoved));
   };
 
   const summarizeStrengthEntries = (machines, getEntry) => {

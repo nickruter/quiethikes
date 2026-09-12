@@ -771,6 +771,11 @@
       } catch (error) {
         if (error && error.name === 'AbortError') return;
         console.error(error);
+        const shouldCopy = confirm('Export failed. Copy the workout backup data to your clipboard instead?');
+        if (!shouldCopy) {
+          alert('Unable to export workout data right now.');
+          return;
+        }
         try {
           await copyExportToClipboard(data);
         } catch (clipboardError) {
@@ -795,10 +800,14 @@
           console.error(error);
           const message = error && error.message === 'invalid-json'
             ? 'Import failed. The selected file is not valid JSON.'
-            : 'Import failed. The selected file is not a valid workout backup.';
+            : error && error.message === 'invalid-file'
+              ? 'Import failed. The selected file could not be read as text.'
+              : 'Import failed. The selected file is not a valid workout backup.';
           alert(message);
         }
       };
+      reader.onerror = () => alert('Import failed. The selected file could not be read.');
+      reader.onabort = () => alert('Import cancelled.');
       reader.readAsText(file);
     }
     exportButton.onclick = () => exportData();
