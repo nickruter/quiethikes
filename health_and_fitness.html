@@ -694,7 +694,10 @@
       historyEl.innerHTML = x.length
         ? x.slice().reverse().map(w => {
             const summary = [];
-            if (w.cardio) summary.push(w.cardio);
+            const cardioSummary = typeof w.caloriesBurned === 'number'
+              ? w.cardio.replace(/ · Calories: \d+ cal$/, '')
+              : w.cardio;
+            if (cardioSummary) summary.push(cardioSummary);
             if (w.strength) summary.push(w.strength);
             if (typeof w.caloriesBurned === 'number') summary.push(`Calories: ${w.caloriesBurned} cal`);
             if (w.feel) summary.push(w.feel);
@@ -730,11 +733,13 @@
       if (hydrated.checked) cardio.push('hydrated');
       if (symptoms.checked) cardio.push('SYMPTOMS');
 
+      const caloriesBurned = estimateCalories();
+      if (caloriesBurned > 0) cardio.push(`Calories: ${caloriesBurned} cal`);
+
       const goal = document.getElementById('goal').value.trim();
       const energy = document.getElementById('energy').value;
       const recovery = document.getElementById('recovery').value;
       const notes = document.getElementById('notes').value.trim();
-      const caloriesBurned = estimateCalories();
 
       let x = read();
       x.push({
