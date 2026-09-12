@@ -42,8 +42,26 @@
     return { strength, totalMoved };
   };
 
+  const parseImportedWorkouts = (raw) => {
+    if (typeof raw !== 'string') throw new Error('invalid-file');
+
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (error) {
+      throw new Error('invalid-json');
+    }
+
+    if (!Array.isArray(parsed) || !parsed.every(isValidWorkout)) {
+      throw new Error('invalid-structure');
+    }
+
+    return parsed;
+  };
+
   return {
     isValidWorkout,
-    summarizeStrengthEntries
+    summarizeStrengthEntries,
+    parseImportedWorkouts
   };
 });

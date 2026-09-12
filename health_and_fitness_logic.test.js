@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { isValidWorkout, summarizeStrengthEntries } = require('./health_and_fitness_logic');
+const { isValidWorkout, summarizeStrengthEntries, parseImportedWorkouts } = require('./health_and_fitness_logic');
 
 test('summarizeStrengthEntries computes total moved', () => {
   const machines = ['Leg press', 'Chest press'];
@@ -31,4 +31,18 @@ test('isValidWorkout rejects unexpected properties', () => {
     cardio: '20 min',
     unexpected: true
   }), false);
+});
+
+test('parseImportedWorkouts rejects invalid JSON', () => {
+  assert.throws(
+    () => parseImportedWorkouts('{not json'),
+    /invalid-json/
+  );
+});
+
+test('parseImportedWorkouts rejects invalid workout structure', () => {
+  assert.throws(
+    () => parseImportedWorkouts(JSON.stringify([{ date: '2026-09-12', extra: true }])),
+    /invalid-structure/
+  );
 });

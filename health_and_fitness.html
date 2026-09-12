@@ -587,7 +587,7 @@
 
   <script src="health_and_fitness_logic.js"></script>
   <script>
-    const { isValidWorkout, summarizeStrengthEntries } = window.HealthFitnessLogic;
+    const { summarizeStrengthEntries, parseImportedWorkouts } = window.HealthFitnessLogic;
     const machines = [
       'Leg press',
       'Seated leg curl',
@@ -756,6 +756,7 @@
       if (!navigator.canShare({ files: [shareFile] })) return false;
 
       await navigator.share({ files: [shareFile], title: 'Workout export', text: 'My workout data' });
+      showToast('Workout data exported.');
       return true;
     };
 
@@ -786,17 +787,13 @@
       const reader = new FileReader();
       reader.onload = () => {
         try {
-          if (typeof reader.result !== 'string') throw new Error('invalid-file');
-          const parsed = JSON.parse(reader.result);
-          if (!Array.isArray(parsed) || !parsed.every(isValidWorkout)) {
-            throw new Error('invalid-structure');
-          }
+          const parsed = parseImportedWorkouts(reader.result);
           localStorage.setItem('workouts', JSON.stringify(parsed));
           render();
           showToast('Workout data imported.');
         } catch (error) {
           console.error(error);
-          const message = error && error.name === 'SyntaxError'
+          const message = error && error.message === 'invalid-json'
             ? 'Import failed. The selected file is not valid JSON.'
             : 'Import failed. The selected file is not a valid workout backup.';
           alert(message);
@@ -804,7 +801,6 @@
       };
       reader.readAsText(file);
     }
-    exportButton.onclick = () => exportData();
     exportButton.onclick = () => exportData();
     importFile.addEventListener('change', (event) => {
       const file = event.target.files && event.target.files[0];
